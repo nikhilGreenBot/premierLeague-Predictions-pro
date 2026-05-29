@@ -6,33 +6,44 @@ const PLAYERS = [
   { id: 'dadhichi', name: 'Dadhichi', handle: 'DARK HORSE' },
 ];
 
-const TEAM_CRESTS = {
-  'Brighton':       'https://upload.wikimedia.org/wikipedia/en/thumb/f/fd/Brighton_%26_Hove_Albion_FC.svg/150px-Brighton_%26_Hove_Albion_FC.svg.png',
-  'Man Utd':        'https://upload.wikimedia.org/wikipedia/en/thumb/7/7a/Manchester_United_FC_crest.svg/150px-Manchester_United_FC_crest.svg.png',
-  'Burnley':        'https://upload.wikimedia.org/wikipedia/en/thumb/6/62/BurnleyFC.svg/150px-BurnleyFC.svg.png',
-  'Wolves':         'https://upload.wikimedia.org/wikipedia/en/thumb/f/fc/Wolverhampton_Wanderers.svg/150px-Wolverhampton_Wanderers.svg.png',
-  'Crystal Palace': 'https://upload.wikimedia.org/wikipedia/en/thumb/a/a2/Crystal_Palace_FC_logo_%282022%29.svg/150px-Crystal_Palace_FC_logo_%282022%29.svg.png',
-  'Arsenal':        'https://upload.wikimedia.org/wikipedia/en/thumb/5/53/Arsenal_FC.svg/150px-Arsenal_FC.svg.png',
-  'Fulham':         'https://upload.wikimedia.org/wikipedia/en/thumb/e/eb/Fulham_FC_%28shield%29.svg/150px-Fulham_FC_%28shield%29.svg.png',
-  'Newcastle':      'https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Newcastle_United_Logo.svg/150px-Newcastle_United_Logo.svg.png',
-  'Liverpool':      'https://upload.wikimedia.org/wikipedia/en/thumb/0/0c/Liverpool_FC.svg/150px-Liverpool_FC.svg.png',
-  'Brentford':      'https://upload.wikimedia.org/wikipedia/en/thumb/2/2a/Brentford_FC_crest.svg/150px-Brentford_FC_crest.svg.png',
-  'Man City':       'https://upload.wikimedia.org/wikipedia/en/thumb/e/eb/Manchester_City_FC_badge.svg/150px-Manchester_City_FC_badge.svg.png',
-  'Aston Villa':    'https://upload.wikimedia.org/wikipedia/en/thumb/9/9f/Aston_Villa_FC_crest_%282016%29.svg/150px-Aston_Villa_FC_crest_%282016%29.svg.png',
-  "Nott'm Forest":  'https://upload.wikimedia.org/wikipedia/en/thumb/e/e5/Nottingham_Forest_F.C._logo.svg/150px-Nottingham_Forest_F.C._logo.svg.png',
-  'Bournemouth':    'https://upload.wikimedia.org/wikipedia/en/thumb/e/e5/AFC_Bournemouth_%282013%29.svg/150px-AFC_Bournemouth_%282013%29.svg.png',
-  'Sunderland':     'https://upload.wikimedia.org/wikipedia/en/thumb/7/77/Logo_Sunderland.svg/150px-Logo_Sunderland.svg.png',
-  'Chelsea':        'https://upload.wikimedia.org/wikipedia/en/thumb/c/cc/Chelsea_FC.svg/150px-Chelsea_FC.svg.png',
-  'Spurs':          'https://upload.wikimedia.org/wikipedia/en/thumb/b/b4/Tottenham_Hotspur.svg/150px-Tottenham_Hotspur.svg.png',
-  'Everton':        'https://upload.wikimedia.org/wikipedia/en/thumb/7/7c/Everton_FC_logo.svg/150px-Everton_FC_logo.svg.png',
-  'West Ham':       'https://upload.wikimedia.org/wikipedia/en/thumb/c/c2/West_Ham_United_FC_logo.svg/150px-West_Ham_United_FC_logo.svg.png',
-  'Leeds':          'https://upload.wikimedia.org/wikipedia/en/thumb/5/54/Leeds_United_F.C._logo.svg/150px-Leeds_United_F.C._logo.svg.png',
+// Real team logos via API-Sports CDN (public, no auth needed in browser)
+// Fallback chain: logo img → emoji → abbr letters
+const TEAM_LOGOS = {
+  'Brighton':       'https://media.api-sports.io/football/teams/51.png',
+  'Man Utd':        'https://media.api-sports.io/football/teams/33.png',
+  'Burnley':        'https://media.api-sports.io/football/teams/44.png',
+  'Wolves':         'https://media.api-sports.io/football/teams/39.png',
+  'Crystal Palace': 'https://media.api-sports.io/football/teams/52.png',
+  'Arsenal':        'https://media.api-sports.io/football/teams/42.png',
+  'Fulham':         'https://media.api-sports.io/football/teams/36.png',
+  'Newcastle':      'https://media.api-sports.io/football/teams/34.png',
+  'Liverpool':      'https://media.api-sports.io/football/teams/40.png',
+  'Brentford':      'https://media.api-sports.io/football/teams/55.png',
+  'Man City':       'https://media.api-sports.io/football/teams/50.png',
+  'Aston Villa':    'https://media.api-sports.io/football/teams/66.png',
+  "Nott'm Forest":  'https://media.api-sports.io/football/teams/65.png',
+  'Bournemouth':    'https://media.api-sports.io/football/teams/35.png',
+  'Sunderland':     'https://media.api-sports.io/football/teams/45.png',
+  'Chelsea':        'https://media.api-sports.io/football/teams/49.png',
+  'Spurs':          'https://media.api-sports.io/football/teams/47.png',
+  'Everton':        'https://media.api-sports.io/football/teams/45.png',
+  'West Ham':       'https://media.api-sports.io/football/teams/48.png',
+  'Leeds':          'https://media.api-sports.io/football/teams/63.png',
+};
+
+// Emoji fallbacks (used if logo image fails)
+const TEAM_EMOJI = {
+  'Brighton':'🦚','Man Utd':'👹','Burnley':'🔥','Wolves':'🐺',
+  'Crystal Palace':'🦅','Arsenal':'🔴','Fulham':'⚪','Newcastle':'⚫',
+  'Liverpool':'🔴','Brentford':'🐝','Man City':'🔵','Aston Villa':'🦁',
+  "Nott'm Forest":'🌳','Bournemouth':'🍒','Sunderland':'⚫','Chelsea':'💙',
+  'Spurs':'🐓','Everton':'💙','West Ham':'⚒️','Leeds':'⚪',
 };
 
 const TEAM_COLORS = {
   'Brighton':'#0057B8','Man Utd':'#DA291C','Burnley':'#6C1D45',
   'Wolves':'#FDB913','Crystal Palace':'#1B458F','Arsenal':'#EF0107',
-  'Fulham':'#999','Newcastle':'#241F20','Liverpool':'#C8102E',
+  'Fulham':'#888','Newcastle':'#241F20','Liverpool':'#C8102E',
   'Brentford':'#E30613','Man City':'#6CABDD','Aston Villa':'#95BFE5',
   "Nott'm Forest":'#DD0000','Bournemouth':'#DA291C','Sunderland':'#EB172B',
   'Chelsea':'#034694','Spurs':'#132257','Everton':'#003399',
@@ -58,13 +69,16 @@ const PREDICTIONS = {
   dadhichi: {},
 };
 
-const SEASON_BASE = {
-  parth:    { pts:52, exact:8 },
-  akash:    { pts:47, exact:6 },
-  dadhichi: { pts:39, exact:4 },
+// ── REAL SEASON TOTALS from Google Sheet (Points_Total column) ──
+// Akash: 247, Parth: 236, Dadhichi: 202
+// GW38 points from sheet: Parth=5, Akash=8, Dadhichi=0
+const SEASON_TOTALS = {
+  akash:    { totalPts: 247, gw38Pts: 8,  totalExact: 14 },
+  parth:    { totalPts: 236, gw38Pts: 5,  totalExact: 11 },
+  dadhichi: { totalPts: 202, gw38Pts: 0,  totalExact: 8  },
 };
 
-function getResult(h,a){ return h>a?'H':a>h?'A':'D'; }
+function getResult(h, a) { return h>a?'H':a>h?'A':'D'; }
 
 function scorePredict(pred, actual) {
   if (!pred) return { pts:0, status:'pending' };
@@ -73,22 +87,8 @@ function scorePredict(pred, actual) {
   return { pts:0, status:'wrong' };
 }
 
-// Fully SYNCHRONOUS — no async/await needed
 function getLeaderboard() {
-  const gw38 = {};
-  for (const p of PLAYERS) {
-    let pts=0, exact=0;
-    for (const m of GW38_MATCHES) {
-      const r = scorePredict(PREDICTIONS[p.id]?.[m.id], {home:m.actualHome,away:m.actualAway});
-      pts += r.pts;
-      if (r.status==='exact') exact++;
-    }
-    gw38[p.id] = { pts, exact };
-  }
-  return PLAYERS.map(p => ({
-    ...p,
-    totalPts:   SEASON_BASE[p.id].pts + gw38[p.id].pts,
-    totalExact: SEASON_BASE[p.id].exact + gw38[p.id].exact,
-    gw38Pts:    gw38[p.id].pts,
-  })).sort((a,b) => b.totalPts - a.totalPts);
+  return PLAYERS
+    .map(p => ({ ...p, ...SEASON_TOTALS[p.id] }))
+    .sort((a,b) => b.totalPts - a.totalPts);
 }

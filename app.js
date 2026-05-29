@@ -3,27 +3,32 @@
 const MEDALS = ['🥇','🥈','🥉'];
 const COLORS  = { parth:'#00ff87', akash:'#f5c518', dadhichi:'#00a8e1' };
 
-// ── CREST ──
+// ── CREST: logo img → emoji fallback → letters ──
 function crest(name) {
-  const url = TEAM_CRESTS[name];
-  const col = TEAM_COLORS[name] || '#555';
-  const abbr = name.replace("Nott'm Forest","NF").replace('Crystal Palace','CP')
+  const url   = TEAM_LOGOS[name];
+  const emoji = TEAM_EMOJI[name] || '⚽';
+  const col   = TEAM_COLORS[name] || '#555';
+  const abbr  = name.replace("Nott'm Forest","NF").replace('Crystal Palace','CP')
     .replace('Aston Villa','AV').replace('Man City','MC').replace('Man Utd','MU')
     .replace('West Ham','WH').replace('Newcastle','NEW').replace('Bournemouth','BOU')
     .replace('Brentford','BRE').replace('Sunderland','SUN')
     .split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase();
+
   if (url) {
-    return `<div class="crest"><img src="${url}" alt="${name}"
-      onerror="this.parentNode.outerHTML='<div class=\\'crest fb\\'style=\\'background:${col}22\\'>${abbr}</div>'"></div>`;
+    // on image error → swap to emoji circle
+    return `<div class="crest">
+      <img src="${url}" alt="${name}"
+        onerror="this.parentNode.innerHTML='<span style=\\'font-size:20px\\'>${emoji}</span>';
+                 this.parentNode.style.background='${col}22';">
+    </div>`;
   }
-  return `<div class="crest fb" style="background:${col}22">${abbr}</div>`;
+  return `<div class="crest" style="background:${col}22"><span style="font-size:20px">${emoji}</span></div>`;
 }
 
 // ── NAV ──
 const tabs      = [...document.querySelectorAll('.nav-tab')];
 const indicator = document.getElementById('navIndicator');
-const order     = tabs.map(t => t.dataset.tab);
-let   curId     = 'leaderboard';
+const order     = tabs.map(t => t.dataset.tab);let   curId     = 'leaderboard';
 let   curIdx    = 0;
 const done      = new Set();
 
@@ -321,7 +326,10 @@ const render = {
   },
 };
 
-// ── BOOT ──
+  newseason() {
+    // static WIP — already in HTML, nothing to render dynamically
+  },
+
 window.addEventListener('DOMContentLoaded', () => {
   // render first tab immediately
   done.add('leaderboard');

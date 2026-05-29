@@ -217,3 +217,76 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 @media(max-width:380px){
   .nav-tab{padding:11px 8px;font-size:10px;letter-spacing:.5px}
 }
+
+/* WIP TAB */
+.wip-tab { border-left: 1px solid var(--border); }
+.wip-tab .ni { opacity: 0.8; }
+.wip-tab.active { color: var(--gold) !important; }
+.wip-tab.active ~ .nav-indicator { background: var(--gold) !important; }
+
+/* WIP CARD */
+.wip-card {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px 40px;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.wip-emoji { font-size: 64px; margin-bottom: 16px; animation: wipBounce 2s ease-in-out infinite; }
+@keyframes wipBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+.wip-title {
+  font-family: var(--fd);
+  font-size: 48px; letter-spacing: 3px;
+  color: var(--gold); margin-bottom: 12px;
+}
+
+.wip-desc {
+  font-size: 15px; color: var(--dim);
+  line-height: 1.6; margin-bottom: 32px;
+}
+
+.wip-desc strong { color: var(--w); }
+
+.wip-features {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; margin-bottom: 32px; text-align: left;
+}
+
+.wip-feature {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 14px;
+  font-family: var(--fc); font-size: 13px; font-weight: 600; letter-spacing: 0.5px;
+  color: var(--dim);
+}
+
+.wip-icon { font-size: 16px; }
+
+.wip-players {
+  display: flex; flex-direction: column; gap: 8px;
+  border-top: 1px solid var(--border); padding-top: 24px;
+}
+
+.wip-player {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--fc); font-size: 15px; font-weight: 700; letter-spacing: 1px;
+  padding: 8px 16px; border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+}
+
+.wip-player span { font-family: var(--fd); font-size: 20px; }
+.wip-player.gold   { color: var(--gold); }
+.wip-player.silver { color: #c0c0c0; }
+.wip-player.bronze { color: #cd7f32; }
+
+@media(max-width:700px){
+  .wip-card { padding: 32px 20px; }
+  .wip-features { grid-template-columns: 1fr; }
+  .wip-title { font-size: 36px; }
+}
