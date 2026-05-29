@@ -16,9 +16,9 @@ body{background:var(--pd);color:var(--w);font-family:var(--fb);min-height:100vh;
 
 /* BG */
 body::before{content:'';position:fixed;inset:0;z-index:-2;
-  background:url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1920&q=80') center/cover,
+  background:url('assets/arsenal_bg.jpg') center/cover,
   linear-gradient(135deg,#37003c,#1a001f);
-  filter:blur(4px) brightness(0.14) saturate(1.5);transform:scale(1.04)}
+  filter:blur(6px) brightness(0.18) saturate(1.4);transform:scale(1.06)}
 body::after{content:'';position:fixed;inset:0;z-index:-1;
   background:linear-gradient(180deg,rgba(26,0,31,0.9) 0%,rgba(10,0,15,0.95) 100%)}
 
@@ -289,4 +289,82 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
   .wip-card { padding: 32px 20px; }
   .wip-features { grid-template-columns: 1fr; }
   .wip-title { font-size: 36px; }
+}
+
+/* PRED ROWS — card layout with crests */
+.pred-rows { display: flex; flex-direction: column; gap: 8px; }
+
+.pred-row {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s;
+  animation: rowIn 0.3s ease both;
+}
+
+.pred-row:hover { border-color: rgba(255,255,255,0.14); }
+
+.pred-teams {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.pred-team {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.pred-team.right {
+  flex-direction: row-reverse; text-align: right;
+}
+
+.pred-tnm {
+  font-family: var(--fc);
+  font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
+}
+
+.pred-scores-block { text-align: center; }
+
+.pred-actual-score {
+  font-family: var(--fd);
+  font-size: 26px; letter-spacing: 3px; line-height: 1;
+  color: var(--g);
+}
+
+.pred-ft {
+  font-family: var(--fc);
+  font-size: 9px; font-weight: 700; letter-spacing: 3px;
+  color: var(--dim); margin-top: 1px;
+}
+
+.pred-right {
+  display: flex; flex-direction: column;
+  align-items: flex-end; gap: 4px;
+  flex-shrink: 0; min-width: 90px;
+}
+
+.pred-guess-label {
+  font-family: var(--fc);
+  font-size: 9px; font-weight: 700; letter-spacing: 3px;
+  color: var(--dim);
+}
+
+.pred-guess-score {
+  font-family: var(--fd);
+  font-size: 22px; letter-spacing: 2px; line-height: 1;
+}
+
+@media(max-width:700px) {
+  .pred-row { flex-direction: column; align-items: stretch; }
+  .pred-right { flex-direction: row; align-items: center; justify-content: space-between; }
+  .pred-tnm { font-size: 11px; }
+  .pred-actual-score { font-size: 20px; }
 }

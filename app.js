@@ -117,23 +117,28 @@ const RENDERERS = {
           wrong:   '<span class="badge wrong">✗ 0 PTS</span>',
           pending: '<span class="badge pend">—</span>',
         };
-        return `<tr>
-          <td class="td-match">${m.home} vs ${m.away}</td>
-          <td class="td-actual">${m.actualHome}–${m.actualAway}</td>
-          <td class="td-pred">${pred ? pred.home+'–'+pred.away : '?–?'}</td>
-          <td>${badges[res.status]}</td>
-        </tr>`;
+        return `
+          <div class="pred-row">
+            <div class="pred-teams">
+              <div class="pred-team">${crest(m.home)}<span class="pred-tnm">${m.home}</span></div>
+              <div class="pred-scores-block">
+                <div class="pred-actual-score">${m.actualHome}–${m.actualAway}</div>
+                <div class="pred-ft">RESULT</div>
+              </div>
+              <div class="pred-team right">${crest(m.away)}<span class="pred-tnm">${m.away}</span></div>
+            </div>
+            <div class="pred-right">
+              <div class="pred-guess-label">PREDICTED</div>
+              <div class="pred-guess-score">${pred ? pred.home+'–'+pred.away : '?–?'}</div>
+              ${badges[res.status]}
+            </div>
+          </div>`;
       }).join('');
       wrap.innerHTML = `
         <div class="ptabs">
           ${PLAYERS.map(p => `<button class="ptab${p.id===pid?' active':''}" data-pid="${p.id}">${p.name}</button>`).join('')}
         </div>
-        <div class="tscroll">
-          <table class="ptable">
-            <thead><tr><th>Match</th><th>Result</th><th>Predicted</th><th>Pts</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>`;
+        <div class="pred-rows">${rows}</div>`;
       wrap.querySelectorAll('.ptab').forEach(b => b.addEventListener('click', () => {
         pid = b.dataset.pid; buildTable();
       }));
