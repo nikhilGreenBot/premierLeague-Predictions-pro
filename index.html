@@ -6,7 +6,7 @@
   <title>PL Predictions Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,400;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,400;0,600;0,700&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -14,114 +14,173 @@
   <!-- ══ PASSWORD GATE ══ -->
   <div class="gate-overlay" id="gateOverlay">
     <div class="gate-bg"></div>
-    <div class="gate-card">
-      <div class="gate-trophy">🏆</div>
-      <div class="gate-title">PL PREDICTIONS PRO</div>
-      <div class="gate-season">2025 / 26</div>
-      <div class="gate-subtitle">MEMBERS ONLY</div>
+    <div class="gate-center">
+      <div class="gate-card">
+        <div class="gate-logo-wrap">
+          <span class="gate-trophy-icon">🏆</span>
+          <div class="gate-logo-text">
+            <span class="gate-logo-pl">PL</span>
+            <span class="gate-logo-sub">PREDICTIONS PRO</span>
+          </div>
+        </div>
+        <div class="gate-divider"></div>
+        <p class="gate-members">MEMBERS ONLY</p>
 
-      <div class="gate-footballs" id="gateBalls"></div>
+        <div class="gate-balls-wrap">
+          <div class="gate-balls-label">Password</div>
+          <div class="gate-balls" id="gateBalls">
+            <span class="gate-balls-empty">Enter your password below</span>
+          </div>
+        </div>
 
-      <div class="gate-input-wrap">
-        <input
-          type="password"
-          id="gateInput"
-          class="gate-input"
-          placeholder="Enter password..."
-          autocomplete="off"
-          spellcheck="false"
-        />
+        <div class="gate-field-wrap">
+          <input
+            type="password"
+            id="gateInput"
+            class="gate-input"
+            placeholder="Password"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+
+        <div class="gate-error-wrap" id="gateErrorWrap">
+          <span class="gate-error-icon">⚠</span>
+          <span id="gateError"></span>
+        </div>
+
+        <button class="gate-submit" id="gateSubmit">
+          <span class="gate-submit-text">ENTER</span>
+          <span class="gate-submit-icon">→</span>
+        </button>
+
+        <p class="gate-hint">⚽ = one character</p>
       </div>
-
-      <div class="gate-hint">Each ⚽ is a character</div>
-      <div class="gate-error" id="gateError"></div>
     </div>
   </div>
 
-  <!-- ══ MAIN APP (hidden until unlocked) ══ -->
-  <div class="app-content" id="appContent" style="display:none">
+  <!-- ══ MAIN APP ══ -->
+  <div class="app" id="app" style="opacity:0;pointer-events:none">
 
     <!-- HEADER -->
-    <header class="site-header">
-      <div class="header-bg-pattern"></div>
+    <header class="header" id="appHeader">
       <div class="header-inner">
-        <div class="header-logo">
-          <div class="logo-lion">🏆</div>
-          <div class="logo-text">
-            <span class="logo-pl">PL</span>
-            <span class="logo-predictions">PREDICTIONS</span>
-            <span class="logo-pro">PRO</span>
+        <div class="header-brand">
+          <span class="header-trophy">🏆</span>
+          <div class="header-titles">
+            <span class="header-pl">PL PREDICTIONS PRO</span>
+            <span class="header-credit">by Parth</span>
           </div>
         </div>
         <div class="header-season">
-          <span class="season-badge">2025 / 26</span>
-          <span class="season-label">🔴 ARSENAL CHAMPIONS</span>
+          <span class="header-season-num">2025/26</span>
+          <span class="header-champion">🔴 Arsenal Champions</span>
         </div>
       </div>
+
+      <!-- NAV TABS -->
+      <nav class="nav" id="mainNav">
+        <div class="nav-inner">
+          <button class="nav-tab active" data-section="leaderboard">
+            <span class="nav-icon">🏅</span><span class="nav-label">Leaderboard</span>
+          </button>
+          <button class="nav-tab" data-section="results">
+            <span class="nav-icon">⚽</span><span class="nav-label">Results</span>
+          </button>
+          <button class="nav-tab" data-section="predictions">
+            <span class="nav-icon">🎯</span><span class="nav-label">Predictions</span>
+          </button>
+          <button class="nav-tab" data-section="history">
+            <span class="nav-icon">📊</span><span class="nav-label">History</span>
+          </button>
+          <button class="nav-tab" data-section="scoring">
+            <span class="nav-icon">📋</span><span class="nav-label">Scoring</span>
+          </button>
+          <button class="nav-tab" data-section="charts">
+            <span class="nav-icon">📈</span><span class="nav-label">Charts</span>
+          </button>
+          <div class="nav-indicator" id="navIndicator"></div>
+        </div>
+      </nav>
     </header>
 
-    <!-- LEADERBOARD -->
-    <section class="leaderboard-section">
-      <div class="section-label">SEASON LEADERBOARD</div>
-      <div class="leaderboard-cards" id="leaderboardCards"></div>
-    </section>
+    <!-- SECTIONS -->
+    <main class="main" id="mainContent">
 
-    <!-- PITCH DIVIDER -->
-    <div class="pitch-divider">
-      <div class="pitch-line"></div>
-      <div class="pitch-centre-circle"></div>
-      <div class="pitch-line"></div>
-    </div>
+      <!-- LEADERBOARD -->
+      <section class="section active" id="section-leaderboard">
+        <div class="section-header">
+          <h2 class="section-title">Season Leaderboard</h2>
+          <span class="section-sub">Final standings · 38 gameweeks</span>
+        </div>
+        <div class="lb-grid" id="lbGrid"></div>
+        <div class="season-badge-strip">
+          <div class="sbs-item"><span class="sbs-val" id="sbsTotalMatches">380</span><span class="sbs-lbl">Total Matches</span></div>
+          <div class="sbs-item"><span class="sbs-val" id="sbsTotalGoals">931</span><span class="sbs-lbl">Goals Scored</span></div>
+          <div class="sbs-item"><span class="sbs-val" id="sbsTopScorer">Haaland</span><span class="sbs-lbl">Top Scorer</span></div>
+          <div class="sbs-item"><span class="sbs-val" id="sbsChampion">Arsenal</span><span class="sbs-lbl">Champions</span></div>
+        </div>
+      </section>
 
-    <!-- GAMEWEEK -->
-    <section class="gameweek-section">
-      <div class="gw-header">
-        <div class="section-label">GAMEWEEK RESULTS</div>
-        <div class="gw-selector">
-          <button class="gw-btn active" data-gw="38">GW 38</button>
+      <!-- RESULTS -->
+      <section class="section" id="section-results">
+        <div class="section-header">
+          <h2 class="section-title">GW38 Results</h2>
+          <span class="section-sub">24 May 2026 · Final Day</span>
         </div>
-      </div>
-      <div class="matches-grid" id="matchesGrid"></div>
-    </section>
+        <div class="matches-list" id="matchesList"></div>
+      </section>
 
-    <!-- LEGEND -->
-    <section class="legend-section">
-      <div class="legend-inner">
-        <div class="legend-title">HOW SCORING WORKS</div>
-        <div class="legend-items">
-          <div class="legend-item">
-            <div class="legend-pts exact">3 PTS</div>
-            <div class="legend-desc">Exact scoreline</div>
-          </div>
-          <div class="legend-item">
-            <div class="legend-pts correct">1 PT</div>
-            <div class="legend-desc">Correct result (W/D/L)</div>
-          </div>
-          <div class="legend-item">
-            <div class="legend-pts wrong">0 PTS</div>
-            <div class="legend-desc">Wrong result</div>
-          </div>
+      <!-- PREDICTIONS -->
+      <section class="section" id="section-predictions">
+        <div class="section-header">
+          <h2 class="section-title">Predictions</h2>
+          <span class="section-sub">All predictions vs actual results</span>
         </div>
-      </div>
-    </section>
+        <div class="pred-table-wrap" id="predTableWrap"></div>
+      </section>
 
-    <!-- FOOTER -->
-    <footer class="site-footer">
-      <div class="footer-inner">
-        <div class="footer-left">
-          <span class="footer-logo">PL PREDICTIONS PRO</span>
-          <span class="footer-sub">Powered by football-data.org API · Firebase Ready</span>
+      <!-- HISTORY -->
+      <section class="section" id="section-history">
+        <div class="section-header">
+          <h2 class="section-title">Season History</h2>
+          <span class="section-sub">Points progression across all 38 gameweeks</span>
         </div>
-        <div class="footer-right">
-          <a href="https://github.com/nikhilgreenbot" class="footer-link" target="_blank">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-            nikhilgreenbot
-          </a>
+        <div class="history-chart" id="historyChart"></div>
+        <div class="history-table" id="historyTable"></div>
+      </section>
+
+      <!-- SCORING -->
+      <section class="section" id="section-scoring">
+        <div class="section-header">
+          <h2 class="section-title">Scoring Rules</h2>
+          <span class="section-sub">How points are awarded</span>
         </div>
-      </div>
+        <div class="scoring-content" id="scoringContent"></div>
+      </section>
+
+      <!-- CHARTS -->
+      <section class="section" id="section-charts">
+        <div class="section-header">
+          <h2 class="section-title">Stats & Charts</h2>
+          <span class="section-sub">Season performance breakdown</span>
+        </div>
+        <div class="charts-grid" id="chartsGrid"></div>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <span class="footer-logo">PL PREDICTIONS PRO</span>
+      <span class="footer-sep">·</span>
+      <span class="footer-sub">2025/26 Season · Powered by football-data.org</span>
+      <span class="footer-sep">·</span>
+      <a href="https://github.com/nikhilgreenbot/premierLeague-Predictions-pro" class="footer-gh" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
     </footer>
-
-  </div><!-- /app-content -->
+  </div>
 
   <script src="data.js"></script>
   <script src="app.js"></script>
