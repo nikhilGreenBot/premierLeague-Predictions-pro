@@ -11,86 +11,117 @@
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header class="site-header">
-    <div class="header-bg-pattern"></div>
-    <div class="header-inner">
-      <div class="header-logo">
-        <div class="logo-lion">⚽</div>
-        <div class="logo-text">
-          <span class="logo-pl">PL</span>
-          <span class="logo-predictions">PREDICTIONS</span>
-          <span class="logo-pro">PRO</span>
-        </div>
+  <!-- ══ PASSWORD GATE ══ -->
+  <div class="gate-overlay" id="gateOverlay">
+    <div class="gate-bg"></div>
+    <div class="gate-card">
+      <div class="gate-trophy">🏆</div>
+      <div class="gate-title">PL PREDICTIONS PRO</div>
+      <div class="gate-season">2025 / 26</div>
+      <div class="gate-subtitle">MEMBERS ONLY</div>
+
+      <div class="gate-footballs" id="gateBalls"></div>
+
+      <div class="gate-input-wrap">
+        <input
+          type="password"
+          id="gateInput"
+          class="gate-input"
+          placeholder="Enter password..."
+          autocomplete="off"
+          spellcheck="false"
+        />
       </div>
-      <div class="header-season">
-        <span class="season-badge">2025 / 26</span>
-        <span class="season-label">FINAL STANDINGS</span>
-      </div>
+
+      <div class="gate-hint">Each ⚽ is a character</div>
+      <div class="gate-error" id="gateError"></div>
     </div>
-  </header>
-
-  <!-- HERO LEADERBOARD -->
-  <section class="leaderboard-section">
-    <div class="section-label">SEASON LEADERBOARD</div>
-    <div class="leaderboard-cards" id="leaderboardCards"></div>
-  </section>
-
-  <!-- DIVIDER -->
-  <div class="pitch-divider">
-    <div class="pitch-line"></div>
-    <div class="pitch-centre-circle"></div>
-    <div class="pitch-line"></div>
   </div>
 
-  <!-- GAMEWEEK SECTION -->
-  <section class="gameweek-section">
-    <div class="gw-header">
-      <div class="section-label">GAMEWEEK RESULTS</div>
-      <div class="gw-selector">
-        <button class="gw-btn active" data-gw="38">GW 38</button>
-      </div>
-    </div>
+  <!-- ══ MAIN APP (hidden until unlocked) ══ -->
+  <div class="app-content" id="appContent" style="display:none">
 
-    <div class="matches-grid" id="matchesGrid"></div>
-  </section>
-
-  <!-- SCORING LEGEND -->
-  <section class="legend-section">
-    <div class="legend-inner">
-      <div class="legend-title">HOW SCORING WORKS</div>
-      <div class="legend-items">
-        <div class="legend-item">
-          <div class="legend-pts exact">3 PTS</div>
-          <div class="legend-desc">Exact scoreline</div>
+    <!-- HEADER -->
+    <header class="site-header">
+      <div class="header-bg-pattern"></div>
+      <div class="header-inner">
+        <div class="header-logo">
+          <div class="logo-lion">🏆</div>
+          <div class="logo-text">
+            <span class="logo-pl">PL</span>
+            <span class="logo-predictions">PREDICTIONS</span>
+            <span class="logo-pro">PRO</span>
+          </div>
         </div>
-        <div class="legend-item">
-          <div class="legend-pts correct">1 PT</div>
-          <div class="legend-desc">Correct result (W/D/L)</div>
-        </div>
-        <div class="legend-item">
-          <div class="legend-pts wrong">0 PTS</div>
-          <div class="legend-desc">Wrong result</div>
+        <div class="header-season">
+          <span class="season-badge">2025 / 26</span>
+          <span class="season-label">🔴 ARSENAL CHAMPIONS</span>
         </div>
       </div>
-    </div>
-  </section>
+    </header>
 
-  <!-- FOOTER -->
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div class="footer-left">
-        <span class="footer-logo">PL PREDICTIONS PRO</span>
-        <span class="footer-sub">Powered by football-data.org API · Firebase Ready</span>
-      </div>
-      <div class="footer-right">
-        <a href="https://github.com/nikhilgreenbot" class="footer-link" target="_blank">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-          nikhilgreenbot
-        </a>
-      </div>
+    <!-- LEADERBOARD -->
+    <section class="leaderboard-section">
+      <div class="section-label">SEASON LEADERBOARD</div>
+      <div class="leaderboard-cards" id="leaderboardCards"></div>
+    </section>
+
+    <!-- PITCH DIVIDER -->
+    <div class="pitch-divider">
+      <div class="pitch-line"></div>
+      <div class="pitch-centre-circle"></div>
+      <div class="pitch-line"></div>
     </div>
-  </footer>
+
+    <!-- GAMEWEEK -->
+    <section class="gameweek-section">
+      <div class="gw-header">
+        <div class="section-label">GAMEWEEK RESULTS</div>
+        <div class="gw-selector">
+          <button class="gw-btn active" data-gw="38">GW 38</button>
+        </div>
+      </div>
+      <div class="matches-grid" id="matchesGrid"></div>
+    </section>
+
+    <!-- LEGEND -->
+    <section class="legend-section">
+      <div class="legend-inner">
+        <div class="legend-title">HOW SCORING WORKS</div>
+        <div class="legend-items">
+          <div class="legend-item">
+            <div class="legend-pts exact">3 PTS</div>
+            <div class="legend-desc">Exact scoreline</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-pts correct">1 PT</div>
+            <div class="legend-desc">Correct result (W/D/L)</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-pts wrong">0 PTS</div>
+            <div class="legend-desc">Wrong result</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-logo">PL PREDICTIONS PRO</span>
+          <span class="footer-sub">Powered by football-data.org API · Firebase Ready</span>
+        </div>
+        <div class="footer-right">
+          <a href="https://github.com/nikhilgreenbot" class="footer-link" target="_blank">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            nikhilgreenbot
+          </a>
+        </div>
+      </div>
+    </footer>
+
+  </div><!-- /app-content -->
 
   <script src="data.js"></script>
   <script src="app.js"></script>
