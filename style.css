@@ -16,9 +16,8 @@ body{background:var(--pd);color:var(--w);font-family:var(--fb);min-height:100vh;
 
 /* BG */
 body::before{content:'';position:fixed;inset:0;z-index:-2;
-  background:url('assets/arsenal_bg.jpg') center/cover,
-  linear-gradient(135deg,#37003c,#1a001f);
-  filter:blur(6px) brightness(0.18) saturate(1.4);transform:scale(1.06)}
+  background:url('assets/arsenal_bg.jpg') center 30% / cover no-repeat;
+  filter:blur(10px) brightness(0.28) saturate(1.2);transform:scale(1.08)}
 body::after{content:'';position:fixed;inset:0;z-index:-1;
   background:linear-gradient(180deg,rgba(26,0,31,0.9) 0%,rgba(10,0,15,0.95) 100%)}
 
