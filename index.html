@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PL Predictions Pro</title>
+  <title>PL Predictions Pro — by Parth</title>
+  <meta name="description" content="Premier League score predictions among friends. Exact score 3pts, correct result 1pt. Live 2026/27 gameweeks, kickoff locks, and a season recap."/>
+  <meta property="og:title" content="PL Predictions Pro — by Parth"/>
+  <meta property="og:description" content="Friends predict Premier League scores. Live 2026/27 board, kickoff locks, streaks, and recaps."/>
+  <meta property="og:type" content="website"/>
+  <meta name="theme-color" content="#37003c"/>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%2337003c'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%2300ff87' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23f5c518'/%3E%3C/svg%3E"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet"/>
@@ -35,7 +41,7 @@
         <button class="nav-tab" data-tab="history"><span class="ni">📊</span><span class="nl">History</span></button>
         <button class="nav-tab" data-tab="scoring"><span class="ni">📋</span><span class="nl">Scoring</span></button>
         <button class="nav-tab" data-tab="charts"><span class="ni">📈</span><span class="nl">Charts</span></button>
-        <button class="nav-tab wip-tab" data-tab="newseason"><span class="ni">🚧</span><span class="nl">2026/27</span></button>
+        <button class="nav-tab live-tab" data-tab="newseason"><span class="ni">⚡</span><span class="nl">2026/27</span></button>
         <div class="nav-indicator" id="navIndicator"></div>
       </div>
     </nav>
@@ -101,27 +107,10 @@
 
     <section class="section" id="s-newseason">
       <div class="section-header">
-        <h2 class="section-title">2026/27 Season</h2>
-        <span class="section-sub">🚧 Work in Progress</span>
+        <h2 class="section-title">2026/27 Live</h2>
+        <span class="section-sub">Predict · locks at kickoff · share with the group</span>
       </div>
-      <div class="wip-card">
-        <div class="wip-emoji">🚧</div>
-        <div class="wip-title">Coming Soon</div>
-        <div class="wip-desc">The 2026/27 Premier League season kicks off <strong>22 August 2026</strong>. Parth is already sharpening the spreadsheet.</div>
-        <div class="wip-features">
-          <div class="wip-feature"><span class="wip-icon">⚽</span><span>All 38 gameweeks</span></div>
-          <div class="wip-feature"><span class="wip-icon">🎯</span><span>Live prediction locking</span></div>
-          <div class="wip-feature"><span class="wip-icon">🔥</span><span>Streak tracking</span></div>
-          <div class="wip-feature"><span class="wip-icon">📧</span><span>Auto GW recap emails</span></div>
-          <div class="wip-feature"><span class="wip-icon">🔴</span><span>Can Arsenal defend the title?</span></div>
-          <div class="wip-feature"><span class="wip-icon">🏆</span><span>Will Akash hold on to #1?</span></div>
-        </div>
-        <div class="wip-players">
-          <div class="wip-player gold">🥇 Akash <span>247 pts</span></div>
-          <div class="wip-player silver">🥈 Parth <span>236 pts</span></div>
-          <div class="wip-player bronze">🥉 Dadhichi <span>202 pts</span></div>
-        </div>
-      </div>
+      <div id="liveApp"></div>
     </section>
 
   </main>
@@ -130,7 +119,7 @@
     <span class="footer-logo">PL PREDICTIONS PRO</span>
     <span class="footer-sep">·</span>
     <span class="footer-sub">2025/26 · football-data.org</span>
-    <a href="https://github.com/nikhilgreenbot/premierLeague-Predictions-pro" class="footer-gh" target="_blank">
+    <a href="https://github.com/nikhilGreenBot/premierLeague-Predictions-pro-by-Parth" class="footer-gh" target="_blank" rel="noopener">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
       GitHub
     </a>
@@ -139,6 +128,10 @@
 </div>
 <script src="bg.js"></script>
 <script src="data.js"></script>
+<script src="fixtures.js"></script>
+<script src="store.js"></script>
+<script src="api.js"></script>
+<script src="live-ui.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
