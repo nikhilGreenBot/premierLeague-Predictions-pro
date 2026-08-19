@@ -61,6 +61,7 @@ function goTo(id) {
   curId  = id;
   curIdx = idx;
   if (!done.has(id)) { done.add(id); RENDERERS[id](); }
+  else if (id === 'newseason') RENDERERS.newseason();
 }
 
 tabs.forEach(t => t.addEventListener('click', () => goTo(t.dataset.tab)));
@@ -274,6 +275,22 @@ const RENDERERS = {
       off+=dash; return p;
     }).join('');
     const legend=slices.map(s=>`<div class="dl"><div class="dd" style="background:${s.c}"></div><span class="dt">${s.k}</span><span class="dv">${counts[s.k]}</span></div>`).join('');
+    const extras = board.map(p => {
+      const s = gw38PlayerStats(p.id);
+      const form = seasonFormStreak(p.id);
+      const miss = s.bestMiss
+        ? `${s.bestMiss.pred.home}–${s.bestMiss.pred.away} vs ${s.bestMiss.match.actualHome}–${s.bestMiss.match.actualAway} (${s.bestMiss.match.home})`
+        : (s.pending === GW38_MATCHES.length ? 'no GW38 picks' : 'exact week');
+      return `<div class="extra-stat">
+        <div class="extra-name" style="color:${COLORS[p.id]}">${p.name}</div>
+        <div class="extra-grid">
+          <div><b>${s.bestRun}</b><span>GW38 scoring run</span></div>
+          <div><b>${form.streak}</b><span>GW pts streak</span></div>
+          <div><b>${s.bestMiss ? s.bestMiss.goalDiff : '—'}</b><span>nearest miss</span></div>
+        </div>
+        <div class="extra-miss">${miss}</div>
+      </div>`;
+    }).join('');
     document.getElementById('chartsGrid').innerHTML = `
       <div class="chart-card">
         <div class="chart-card-title">Season Points</div>
@@ -296,18 +313,23 @@ const RENDERERS = {
           </svg>
           <div class="donut-legend">${legend}</div>
         </div>
+      </div>
+      <div class="chart-card extra-card">
+        <div class="chart-card-title">Streaks &amp; nearest miss · GW38</div>
+        ${extras}
       </div>`;
     setTimeout(() => document.querySelectorAll('.bar-fill').forEach(el => el.style.width = el.dataset.w + '%'), 60);
   },
 
   newseason() {
-    // content is static HTML in index.html — nothing to render
+    renderLiveSeason();
   },
 
 };
 
 // ── BOOT ──
 window.addEventListener('DOMContentLoaded', () => {
+  bootLiveSeason();
   done.add('leaderboard');
   RENDERERS.leaderboard();
   requestAnimationFrame(() => moveIndicator(tabs[0]));
