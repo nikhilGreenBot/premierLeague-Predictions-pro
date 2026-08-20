@@ -1,6 +1,6 @@
 // 2026/27 Premier League fixtures — all 38 gameweeks / 380 matches
 // Kickoffs stored as UTC ISO. Displayed in Europe/London.
-// Source: premierleague.com fixture release. Live scores overlay from football-data.org when a token is set.
+// Source: premierleague.com fixture release. Live scores overlay from the ESPN scoreboard (GitHub Pages CORS-safe).
 
 const SEASON_26 = {
   id: '2026-27',
@@ -21,7 +21,7 @@ const TEAM_ALIASES = {
   'leeds': 'Leeds', 'leeds united': 'Leeds', 'leeds united fc': 'Leeds',
   'brentford': 'Brentford', 'brentford fc': 'Brentford',
   'spurs': 'Spurs', 'tottenham': 'Spurs', 'tottenham hotspur': 'Spurs', 'tottenham hotspur fc': 'Spurs',
-  'brighton': 'Brighton', 'brighton & hove albion': 'Brighton', 'brighton and hove albion': 'Brighton', 'brighton & hove albion fc': 'Brighton',
+  'brighton': 'Brighton', 'brighton & hove albion': 'Brighton', 'brighton and hove albion': 'Brighton', 'brighton & hove albion fc': 'Brighton', 'brighton and hove albion fc': 'Brighton',
   'aston villa': 'Aston Villa', 'aston villa fc': 'Aston Villa', 'villa': 'Aston Villa',
   'man city': 'Man City', 'manchester city': 'Man City', 'manchester city fc': 'Man City',
   'bournemouth': 'Bournemouth', 'afc bournemouth': 'Bournemouth',

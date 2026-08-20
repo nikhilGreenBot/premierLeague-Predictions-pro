@@ -52,7 +52,7 @@ function renderLiveSeason() {
   const board = liveLeaderboard(players, matches, preds);
   const meRow = board.find(p => p.id === me) || board[0];
   const firstKo = formatKickoff(SEASON_26.kickoff);
-  const apiOn = !!FootballAPI.token();
+  const scoresOn = !!FootballAPI.lastSync && !FootballAPI.lastError;
   const gws = [...new Set(matches.map(m => m.gw))];
 
   const predictedCount = gwMatches.filter(m => (preds[me] || {})[m.id]).length;
@@ -66,8 +66,8 @@ function renderLiveSeason() {
         <div class="live-sub">${predictedCount}/${gwMatches.length} predicted · ${lockedCount} locked · ${matches.length} fixtures this season</div>
       </div>
       <div class="live-pills">
-        <span class="live-pill ${apiOn ? 'on' : ''}">${apiOn ? 'Live scores on' : 'Scores: enter FT or add a token'}</span>
-        <span class="live-pill">${FootballAPI.lastSync ? 'Synced ' + new Date(FootballAPI.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : (FootballAPI.lastError || 'All 38 gameweeks bundled')}</span>
+        <span class="live-pill ${scoresOn ? 'on' : ''}">${FootballAPI.lastError ? 'Scores offline' : 'Live scores on'}</span>
+        <span class="live-pill">${FootballAPI.lastSync ? 'Synced ' + new Date(FootballAPI.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : (FootballAPI.lastError || 'ESPN auto-sync · all 38 GWs bundled')}</span>
       </div>
     </div>
 
@@ -158,9 +158,10 @@ function renderLiveSeason() {
     </div>
 
     <details class="live-settings">
-      <summary>Settings · API, Firebase, Google Form, lock override</summary>
-      <label>football-data.org token
-        <input id="setToken" type="password" autocomplete="off" placeholder="Paste free API token" value="${LiveStore.state.settings.footballDataToken || ''}"/>
+      <summary>Settings · Firebase, lock override, optional APIs</summary>
+      <p class="muted">Live FT / in-play scores load automatically from ESPN — no token. football-data.org only works on localhost (their API blocks GitHub Pages).</p>
+      <label>football-data.org token (optional, localhost only)
+        <input id="setToken" type="password" autocomplete="off" placeholder="Not needed on the live site" value="${LiveStore.state.settings.footballDataToken || ''}"/>
       </label>
       <label>League ID (same ID for the whole group)
         <input id="setLeague" type="text" value="${LiveStore.state.leagueId || 'PARTH'}"/>
@@ -391,6 +392,6 @@ function bootLiveSeason() {
       const t = new Date(m.kickoff).getTime();
       return Date.now() >= t && (m.actualHome == null || m.status === 'IN_PLAY' || m.status === 'PAUSED');
     });
-    if (live && FootballAPI.token()) syncLiveApi(false);
+    if (live) syncLiveApi(false);
   }, 60000);
 }

@@ -52,13 +52,13 @@ The season opens **Friday 21 August 2026, 20:00 UK** (Arsenal vs Coventry). Frie
 4. Tap **Copy league code** and paste it in the group chat
 5. Everyone else taps **Import code** so the board is shared
 
-Optional: set a PIN in Settings so nobody edits your picks. Paste a [football-data.org](https://www.football-data.org/) token in Settings to pull live scores. Paste Firebase config if you want realtime sync instead of share codes.
+Optional: set a PIN in Settings so nobody edits your picks. Live scores sync automatically from ESPN (no token). Paste Firebase config if you want realtime sync instead of share codes.
 
 ---
 
 ## Roadmap for 2026/27
 
-- [x] Connect to [football-data.org API](https://www.football-data.org/) for live fixtures and results — paste a free token in **2026/27 → Settings**. All 38 gameweeks are bundled with no token.
+- [x] Live FT / in-play scores from the ESPN Premier League scoreboard (works on GitHub Pages). All 38 gameweeks are bundled with no token. football-data.org is optional on localhost only.
 - [x] Firebase Firestore for real-time predictions and live scoring — optional. Paste your Firebase web config in Settings (see below). Share codes work without it.
 - [x] In-app prediction form so players never touch the sheet — optional Google Form embed in Settings if you still want one.
 - [x] Automatic prediction lock at kickoff — client-side lock on every device. Optional PIN. Testing override lives in Settings.
@@ -87,10 +87,13 @@ python3 -m http.server 8080
 # then http://localhost:8080
 ```
 
-Scoring tests:
+Tests:
 
 ```bash
 node tests/scoring.test.js
+node tests/fixtures.test.js
+node tests/firebase-config.test.js
+node tests/api.test.js
 ```
 
 Optional private config: copy `config.example.js` to `config.js` and add `<script src="config.js"></script>` before `bg.js` in `index.html`. `config.js` is gitignored so tokens stay off GitHub.
