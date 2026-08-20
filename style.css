@@ -402,7 +402,10 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 .ptab.add{border-style:dashed}
 .ptab-x{margin-left:8px;opacity:.55;font-size:14px;line-height:1}
 .ptab-x:hover{opacity:1;color:var(--red)}
-.gw-switch{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.gw-switch{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.gw-select{flex:1;min-width:160px;max-width:240px;padding:8px 12px;background:var(--glass);
+  border:1px solid var(--border);border-radius:8px;color:var(--w);font-family:var(--fc);
+  font-size:14px;font-weight:800;letter-spacing:1px}
 .gw-btn{padding:8px 14px;background:var(--glass);border:1px solid var(--border);border-radius:8px;
   font-family:var(--fc);font-size:12px;font-weight:800;letter-spacing:1px;color:var(--dim);cursor:pointer}
 .gw-btn.active{background:var(--gold);border-color:var(--gold);color:var(--p)}

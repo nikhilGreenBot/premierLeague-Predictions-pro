@@ -63,11 +63,11 @@ function renderLiveSeason() {
       <div>
         <div class="live-kicker">Season ${SEASON_26.label} · Gameweek ${gw}</div>
         <div class="live-headline">${firstKo.locked ? 'Season underway' : 'First whistle: ' + firstKo.when}</div>
-        <div class="live-sub">${predictedCount}/${gwMatches.length} predicted · ${lockedCount} locked · ${apiOn ? 'Live scores on' : 'Bundled fixtures'}</div>
+        <div class="live-sub">${predictedCount}/${gwMatches.length} predicted · ${lockedCount} locked · ${matches.length} fixtures this season</div>
       </div>
       <div class="live-pills">
-        <span class="live-pill ${apiOn ? 'on' : ''}">${apiOn ? 'API live' : 'Add API token for live scores'}</span>
-        <span class="live-pill">${FootballAPI.lastSync ? 'Synced ' + new Date(FootballAPI.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : (FootballAPI.lastError || 'Share codes work offline')}</span>
+        <span class="live-pill ${apiOn ? 'on' : ''}">${apiOn ? 'Live scores on' : 'Scores: enter FT or add a token'}</span>
+        <span class="live-pill">${FootballAPI.lastSync ? 'Synced ' + new Date(FootballAPI.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : (FootballAPI.lastError || 'All 38 gameweeks bundled')}</span>
       </div>
     </div>
 
@@ -77,7 +77,11 @@ function renderLiveSeason() {
     </div>
 
     <div class="gw-switch">
-      ${gws.map(g => `<button class="gw-btn ${g===gw?'active':''}" data-gw="${g}">GW ${g}</button>`).join('')}
+      <button type="button" class="gw-btn" data-gw-step="-1" ${gw<=gws[0]?'disabled':''}>‹</button>
+      <select class="gw-select" id="gwSelect">
+        ${gws.map(g => `<option value="${g}" ${g===gw?'selected':''}>Gameweek ${g}</option>`).join('')}
+      </select>
+      <button type="button" class="gw-btn" data-gw-step="1" ${gw>=gws[gws.length-1]?'disabled':''}>›</button>
     </div>
 
     <div class="live-lb">
@@ -195,8 +199,14 @@ function renderLiveSeason() {
       removeLivePlayer(btn.dataset.removePlayer);
     });
   });
-  wrap.querySelectorAll('[data-gw]').forEach(btn => {
-    btn.addEventListener('click', () => { liveGw = Number(btn.dataset.gw); renderLiveSeason(); });
+  wrap.querySelector('#gwSelect').addEventListener('change', (e) => {
+    liveGw = Number(e.target.value); renderLiveSeason();
+  });
+  wrap.querySelectorAll('[data-gw-step]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const next = gw + Number(btn.dataset.gwStep);
+      if (gws.includes(next)) { liveGw = next; renderLiveSeason(); }
+    });
   });
   wrap.querySelectorAll('.step-row').forEach(row => bindStepper(row, me, gwMatches));
   wrap.querySelectorAll('[data-enter-result]').forEach(btn => {

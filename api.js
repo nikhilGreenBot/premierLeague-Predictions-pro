@@ -8,13 +8,13 @@ const FootballAPI = {
     return (LiveStore.state.settings.footballDataToken || '').trim();
   },
 
-  async fetchMatchday(matchday) {
+  async fetchSeason() {
     const token = this.token();
     if (!token) {
-      this.lastError = 'No API token yet — using bundled fixtures.';
+      this.lastError = '';
       return null;
     }
-    const url = `https://api.football-data.org/v4/competitions/PL/matches?matchday=${matchday}`;
+    const url = `https://api.football-data.org/v4/competitions/PL/matches`;
     try {
       const res = await fetch(url, { headers: { 'X-Auth-Token': token } });
       if (!res.ok) {
@@ -53,7 +53,7 @@ const FootballAPI = {
   },
 
   async syncGameweek(gw) {
-    const matches = await this.fetchMatchday(gw);
+    const matches = await this.fetchSeason();
     if (!matches) return { ok: false, count: 0, error: this.lastError };
     const mapped = this.toResults(matches);
     LiveStore.mergeResults(mapped);

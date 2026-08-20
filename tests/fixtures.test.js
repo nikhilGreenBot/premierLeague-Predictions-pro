@@ -15,8 +15,10 @@ function assert(cond, msg) {
   if (!cond) throw new Error(msg);
 }
 
-assert(SEASON_MATCHES.length === 50, 'GW1–GW5 should be 50 matches');
+assert(SEASON_MATCHES.length === 380, 'full 2026/27 season is 380 matches');
 assert(SEASON_MATCHES.filter(m => m.gw === 1).length === 10, 'GW1 has 10 matches');
+assert(SEASON_MATCHES.filter(m => m.gw === 38).length === 10, 'GW38 has 10 matches');
+assert(new Set(SEASON_MATCHES.map(m => m.gw)).size === 38, '38 gameweeks');
 assert(canonicalTeam('Manchester United') === 'Man Utd', 'alias Man Utd');
 assert(canonicalTeam('AFC Bournemouth') === 'Bournemouth', 'alias Bournemouth');
 assert(canonicalTeam("Nott'm Forest") === "Nott'm Forest", 'forest short name');

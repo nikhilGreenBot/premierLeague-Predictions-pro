@@ -38,7 +38,7 @@ Each player predicts the scoreline for every Premier League match before kickoff
 - **History** — SVG points progression across the season
 - **Scoring** — visual explanation of the points system
 - **Charts** — bar charts, GW38 donut, **streaks and nearest-miss**
-- **2026/27 Live** — predict GW1–GW5, kickoff locks, share codes, recaps, optional live scores
+- **2026/27 Live** — predict all 38 gameweeks, kickoff locks, share codes, recaps, optional live scores
 
 ---
 
@@ -58,7 +58,7 @@ Optional: set a PIN in Settings so nobody edits your picks. Paste a [football-da
 
 ## Roadmap for 2026/27
 
-- [x] Connect to [football-data.org API](https://www.football-data.org/) for live fixtures and results — paste a free token in **2026/27 → Settings**. Bundled GW1–GW5 fixtures work with no token.
+- [x] Connect to [football-data.org API](https://www.football-data.org/) for live fixtures and results — paste a free token in **2026/27 → Settings**. All 38 gameweeks are bundled with no token.
 - [x] Firebase Firestore for real-time predictions and live scoring — optional. Paste your Firebase web config in Settings (see below). Share codes work without it.
 - [x] In-app prediction form so players never touch the sheet — optional Google Form embed in Settings if you still want one.
 - [x] Automatic prediction lock at kickoff — client-side lock on every device. Optional PIN. Testing override lives in Settings.
