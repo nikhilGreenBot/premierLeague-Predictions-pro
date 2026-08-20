@@ -23,12 +23,15 @@ const TEAM_LOGOS = {
   'Aston Villa':    'https://media.api-sports.io/football/teams/66.png',
   "Nott'm Forest":  'https://media.api-sports.io/football/teams/65.png',
   'Bournemouth':    'https://media.api-sports.io/football/teams/35.png',
-  'Sunderland':     'https://media.api-sports.io/football/teams/45.png',
+  'Sunderland':     'https://media.api-sports.io/football/teams/746.png',
   'Chelsea':        'https://media.api-sports.io/football/teams/49.png',
   'Spurs':          'https://media.api-sports.io/football/teams/47.png',
   'Everton':        'https://media.api-sports.io/football/teams/45.png',
   'West Ham':       'https://media.api-sports.io/football/teams/48.png',
   'Leeds':          'https://media.api-sports.io/football/teams/63.png',
+  'Coventry':       'https://media.api-sports.io/football/teams/70.png',
+  'Hull':           'https://media.api-sports.io/football/teams/64.png',
+  'Ipswich':        'https://media.api-sports.io/football/teams/57.png',
 };
 
 // Emoji fallbacks (used if logo image fails)
@@ -38,6 +41,7 @@ const TEAM_EMOJI = {
   'Liverpool':'🔴','Brentford':'🐝','Man City':'🔵','Aston Villa':'🦁',
   "Nott'm Forest":'🌳','Bournemouth':'🍒','Sunderland':'⚫','Chelsea':'💙',
   'Spurs':'🐓','Everton':'💙','West Ham':'⚒️','Leeds':'⚪',
+  'Coventry':'🟡','Hull':'🐯','Ipswich':'🔵',
 };
 
 const TEAM_COLORS = {
@@ -48,6 +52,7 @@ const TEAM_COLORS = {
   "Nott'm Forest":'#DD0000','Bournemouth':'#DA291C','Sunderland':'#EB172B',
   'Chelsea':'#034694','Spurs':'#132257','Everton':'#003399',
   'West Ham':'#7A263A','Leeds':'#FFCD00',
+  'Coventry':'#77BBFF','Hull':'#F5A12D','Ipswich':'#003399',
 };
 
 const GW38_MATCHES = [
@@ -91,4 +96,90 @@ function getLeaderboard() {
   return PLAYERS
     .map(p => ({ ...p, ...SEASON_TOTALS[p.id] }))
     .sort((a,b) => b.totalPts - a.totalPts);
+}
+
+function nearestMiss(pred, actual) {
+  if (!pred || actual == null || actual.home == null || actual.away == null) return null;
+  const goalDiff = Math.abs(pred.home - actual.home) + Math.abs(pred.away - actual.away);
+  const exact = goalDiff === 0;
+  const resultOk = getResult(pred.home, pred.away) === getResult(actual.home, actual.away);
+  return { goalDiff, exact, resultOk };
+}
+
+function gw38PlayerStats(playerId) {
+  const preds = PREDICTIONS[playerId] || {};
+  let pts = 0, exact = 0, correct = 0, wrong = 0, pending = 0;
+  let bestMiss = null;
+  let run = 0, bestRun = 0, exactRun = 0, bestExactRun = 0;
+  const rows = GW38_MATCHES.map(m => {
+    const pred = preds[m.id];
+    const scored = scorePredict(pred, { home: m.actualHome, away: m.actualAway });
+    pts += scored.pts;
+    if (scored.status === 'exact') exact++;
+    else if (scored.status === 'correct') correct++;
+    else if (scored.status === 'wrong') wrong++;
+    else pending++;
+    if (scored.pts > 0) { run++; if (run > bestRun) bestRun = run; }
+    else run = 0;
+    if (scored.status === 'exact') { exactRun++; if (exactRun > bestExactRun) bestExactRun = exactRun; }
+    else exactRun = 0;
+    const miss = nearestMiss(pred, { home: m.actualHome, away: m.actualAway });
+    if (miss && !miss.exact && (bestMiss == null || miss.goalDiff < bestMiss.goalDiff)) {
+      bestMiss = { ...miss, match: m, pred };
+    }
+    return { match: m, pred, scored, miss };
+  });
+  return { pts, exact, correct, wrong, pending, bestRun, bestExactRun, bestMiss, rows };
+}
+
+function seasonFormStreak(playerId) {
+  const recent = { parth:[4,8,6,12,5], akash:[5,9,7,13,8], dadhichi:[3,6,4,9,0] }[playerId] || [];
+  let streak = 0;
+  for (let i = recent.length - 1; i >= 0; i--) {
+    if (recent[i] > 0) streak++;
+    else break;
+  }
+  return { recent, streak };
+}
+
+function liveLeaderboard(players, matches, predictions) {
+  return players.map(p => {
+    let totalPts = 0, totalExact = 0, played = 0;
+    let run = 0, bestRun = 0, bestMiss = null;
+    matches.forEach(m => {
+      if (m.actualHome == null || m.actualAway == null) return;
+      const pred = (predictions[p.id] || {})[m.id];
+      const scored = scorePredict(pred, { home: m.actualHome, away: m.actualAway });
+      if (!pred) return;
+      played++;
+      totalPts += scored.pts;
+      if (scored.status === 'exact') totalExact++;
+      if (scored.pts > 0) { run++; if (run > bestRun) bestRun = run; }
+      else run = 0;
+      const miss = nearestMiss(pred, { home: m.actualHome, away: m.actualAway });
+      if (miss && !miss.exact && (bestMiss == null || miss.goalDiff < bestMiss.goalDiff)) {
+        bestMiss = { ...miss, match: m, pred };
+      }
+    });
+    return { ...p, totalPts, totalExact, played, bestRun, bestMiss };
+  }).sort((a,b) => b.totalPts - a.totalPts || b.totalExact - a.totalExact);
+}
+
+function formatKickoff(iso, now = Date.now()) {
+  const t = new Date(iso);
+  const diff = t.getTime() - now;
+  const when = t.toLocaleString('en-GB', {
+    weekday: 'short', day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London',
+  }) + ' UK';
+  if (diff <= 0) return { when, locked: true, label: 'LOCKED', ms: diff };
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const label = d > 0 ? `Locks in ${d}d ${h}h` : h > 0 ? `Locks in ${h}h ${m}m` : `Locks in ${m}m`;
+  return { when, locked: false, label, ms: diff };
+}
+
+function slugifyName(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'player';
 }
