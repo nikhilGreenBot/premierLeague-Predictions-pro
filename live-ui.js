@@ -72,7 +72,7 @@ function renderLiveSeason() {
     </div>
 
     <div class="live-who">
-      ${players.map(p => `<button class="ptab ${p.id===me?'active':''}" data-live-player="${p.id}">${p.name}</button>`).join('')}
+      ${players.map(p => `<button class="ptab ${p.id===me?'active':''}" data-live-player="${p.id}">${p.name}${players.length>1?`<span class="ptab-x" data-remove-player="${p.id}" title="Remove ${p.name}">×</span>`:''}</button>`).join('')}
       <button class="ptab add" data-add-player>+ Add friend</button>
     </div>
 
@@ -161,8 +161,8 @@ function renderLiveSeason() {
       <label>League ID (same ID for the whole group)
         <input id="setLeague" type="text" value="${LiveStore.state.leagueId || 'PARTH'}"/>
       </label>
-      <label>Firebase config JSON (optional realtime sync)
-        <textarea id="setFb" rows="5" placeholder='{"apiKey":"...","projectId":"..."}'>${LiveStore.state.settings.firebaseConfig ? JSON.stringify(LiveStore.state.settings.firebaseConfig, null, 2) : ''}</textarea>
+      <label>Firebase config (paste the whole snippet from the console — JS or JSON)
+        <textarea id="setFb" rows="7" placeholder='const firebaseConfig = { apiKey: "...", projectId: "..." };'>${LiveStore.state.settings.firebaseConfig ? JSON.stringify(LiveStore.state.settings.firebaseConfig, null, 2) : ''}</textarea>
       </label>
       <label>Google Form URL (optional — in-app form is already live)
         <input id="setForm" type="url" placeholder="https://docs.google.com/forms/..." value="${LiveStore.state.settings.googleFormUrl || ''}"/>
@@ -188,6 +188,13 @@ function renderLiveSeason() {
     btn.addEventListener('click', () => switchLivePlayer(btn.dataset.livePlayer));
   });
   wrap.querySelector('[data-add-player]').addEventListener('click', addLivePlayer);
+  wrap.querySelectorAll('[data-remove-player]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      removeLivePlayer(btn.dataset.removePlayer);
+    });
+  });
   wrap.querySelectorAll('[data-gw]').forEach(btn => {
     btn.addEventListener('click', () => { liveGw = Number(btn.dataset.gw); renderLiveSeason(); });
   });
@@ -278,6 +285,17 @@ function addLivePlayer() {
   }
 }
 
+function removeLivePlayer(id) {
+  const p = LiveStore.state.players.find(x => x.id === id);
+  if (!p) return;
+  if (LiveStore.state.players.length <= 1) { toast('Keep at least one player'); return; }
+  if (!confirm('Remove ' + p.name + ' from the league? Their picks go with them.')) return;
+  LiveStore.removePlayer(id).then(() => {
+    renderLiveSeason();
+    toast(p.name + ' removed');
+  });
+}
+
 function enterResult(matchId) {
   const home = prompt('Full-time home goals?');
   if (home == null || home === '') return;
@@ -309,8 +327,8 @@ function saveLiveSettings() {
   let firebaseConfig = null;
   const rawFb = document.getElementById('setFb').value.trim();
   if (rawFb) {
-    try { firebaseConfig = JSON.parse(rawFb); }
-    catch (e) { toast('Firebase JSON is invalid'); return; }
+    try { firebaseConfig = parseFirebaseConfig(rawFb); }
+    catch (e) { toast(e.message || 'Firebase JSON is invalid'); return; }
   }
   LiveStore.state.leagueId = leagueId;
   LiveStore.updateSettings({ footballDataToken: token, googleFormUrl: form, recapEmails: emails, allowLate, firebaseConfig });

@@ -75,7 +75,25 @@ const LiveStore = {
     this.state.players.push({ id, name: name.trim(), handle: (handle || 'NEW SIGNING').toUpperCase() });
     this.saveLocal();
     this.pushPlayer(id);
+    this.pushPlayers();
     return id;
+  },
+
+  async removePlayer(id) {
+    if (this.state.players.length <= 1) return false;
+    if (!this.state.players.some(p => p.id === id)) return false;
+    this.state.players = this.state.players.filter(p => p.id !== id);
+    delete this.state.predictions[id];
+    delete this.state.pins[id];
+    if (this.state.currentPlayerId === id) {
+      this.state.currentPlayerId = this.state.players[0].id;
+    }
+    this.saveLocal();
+    await this.pushPlayers();
+    if (this.firebase) {
+      try { await this._col().collection('preds').doc(id).delete(); } catch (e) {}
+    }
+    return true;
   },
 
   setPin(playerId, pin) {
@@ -210,10 +228,10 @@ const LiveStore = {
       }
     }));
     unsubs.push(col.collection('meta').doc('players').onSnapshot(doc => {
-      if (doc.exists && Array.isArray(doc.data().players)) {
-        doc.data().players.forEach(p => {
-          if (!this.state.players.some(x => x.id === p.id)) this.state.players.push(p);
-        });
+      if (doc.exists && Array.isArray(doc.data().players) && doc.data().players.length) {
+        const remote = doc.data().players;
+        const byId = Object.fromEntries(this.state.players.map(p => [p.id, p]));
+        this.state.players = remote.map(p => byId[p.id] ? { ...byId[p.id], ...p } : p);
         this.saveLocal();
       }
     }));
@@ -231,13 +249,62 @@ const LiveStore = {
     await this._col().collection('meta').doc('results').set({ results: this.state.results, updatedAt: Date.now() }, { merge: true });
   },
 
+  async pushPlayers() {
+    if (!this.firebase) return;
+    await this._col().collection('meta').doc('players').set({ players: this.state.players, updatedAt: Date.now() });
+  },
+
   async pushAll() {
     if (!this.firebase) return;
-    await this._col().collection('meta').doc('players').set({ players: this.state.players }, { merge: true });
+    await this.pushPlayers();
     await this.pushResults();
     for (const p of this.state.players) await this.pushPlayer(p.id);
   },
 };
+
+function parseFirebaseConfig(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return null;
+  try {
+    const direct = JSON.parse(text);
+    if (direct && typeof direct === 'object' && !Array.isArray(direct)) return direct;
+  } catch (e) {}
+
+  let start = -1;
+  const named = text.search(/firebaseConfig\s*=\s*\{/);
+  if (named >= 0) start = text.indexOf('{', named);
+  else {
+    const keyAt = text.search(/["']?apiKey["']?\s*:/);
+    if (keyAt >= 0) {
+      for (let i = keyAt; i >= 0; i--) {
+        if (text[i] === '{') { start = i; break; }
+      }
+    }
+  }
+  if (start < 0) throw new Error('Could not find a firebaseConfig object in that paste.');
+
+  let depth = 0, end = -1;
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === '{') depth++;
+    else if (text[i] === '}') {
+      depth--;
+      if (depth === 0) { end = i; break; }
+    }
+  }
+  if (end < 0) throw new Error('Firebase config looks incomplete — copy through the closing }.');
+
+  let s = text.slice(start, end + 1);
+  s = s.replace(/\/\*[\s\S]*?\*\//g, '');
+  s = s.replace(/\/\/.*$/gm, '');
+  s = s.replace(/'([^'\\]*)'/g, '"$1"');
+  s = s.replace(/([,{]\s*)([A-Za-z0-9_]+)\s*:/g, '$1"$2":');
+  s = s.replace(/,(\s*[}\]])/g, '$1');
+  let obj;
+  try { obj = JSON.parse(s); }
+  catch (e) { throw new Error('Could not read that Firebase paste. Copy the firebaseConfig { ... } block from Project settings → Your apps.'); }
+  if (!obj || !obj.apiKey) throw new Error('That config is missing apiKey.');
+  return obj;
+}
 
 function loadExternalScript(src) {
   return new Promise((resolve, reject) => {
