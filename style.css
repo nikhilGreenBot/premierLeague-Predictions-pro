@@ -1,24 +1,35 @@
 /* PL PREDICTIONS PRO v4 */
 :root {
   --p: #37003c; --pd: #1a001f;
-  --g: #00ff87; --w: #f5f5f7;
-  --dim: #a08cb0; --gold: #f5c518;
+  --g: #00ff87; --w: #f7f4fb;
+  --dim: #d4c6e0; --gold: #f5c518;
   --red: #ef0107; --b: #00a8e1;
-  --glass: rgba(12,0,18,0.72);
-  --border: rgba(255,255,255,0.08);
+  --glass: rgba(12,0,18,0.78);
+  --border: rgba(255,255,255,0.12);
   --fd: 'Bebas Neue',sans-serif;
   --fc: 'Barlow Condensed',sans-serif;
   --fb: 'Barlow',sans-serif;
+  --fm: 'Share Tech Mono',ui-monospace,monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--pd);color:var(--w);font-family:var(--fb);min-height:100vh;overflow-x:hidden}
+body{background:var(--pd);color:var(--w);font-family:var(--fb);font-size:16px;line-height:1.45;min-height:100vh;overflow-x:hidden}
 
 /* BG */
 body::before{content:'';position:fixed;inset:0;z-index:-2;
   background:linear-gradient(135deg,#37003c 0%,#1a001f 100%);}
 body::after{content:'';position:fixed;inset:0;z-index:-1;
-  background:linear-gradient(180deg,rgba(26,0,31,0.9) 0%,rgba(10,0,15,0.95) 100%)}
+  background:linear-gradient(180deg,rgba(18,0,22,0.58) 0%,rgba(8,0,12,0.78) 100%)}
+.epl-photo-bg{
+  position:fixed;inset:0;z-index:-2;
+  width:100vw;height:100vh;
+  background-size:cover;
+  background-position:center center;
+  background-repeat:no-repeat;
+  filter:blur(10px) brightness(0.42) saturate(1.15);
+  transform:scale(1.12);
+  pointer-events:none;
+}
 
 /* APP */
 .app{min-height:100vh;display:flex;flex-direction:column}
@@ -33,7 +44,7 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 .header-trophy{font-size:26px;filter:drop-shadow(0 0 10px rgba(245,197,24,.5))}
 .header-titles{display:flex;flex-direction:column;line-height:1.15}
 .header-pl{font-family:var(--fd);font-size:21px;letter-spacing:2px;color:var(--g)}
-.header-credit{font-size:11px;color:var(--dim)}
+.header-credit{font-size:13px;color:var(--dim)}
 .header-season{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
 .header-season-num{font-family:var(--fd);font-size:20px;letter-spacing:2px}
 .header-champion{font-family:var(--fc);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--red)}
@@ -43,9 +54,9 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 .nav::-webkit-scrollbar{display:none}
 .nav-inner{display:flex;align-items:stretch;padding:0 12px;position:relative;min-width:max-content}
 .nav-tab{display:flex;align-items:center;gap:5px;padding:11px 14px;
-  background:none;border:none;font-family:var(--fc);font-size:13px;font-weight:700;
-  letter-spacing:1.5px;color:var(--dim);cursor:pointer;
-  transition:color .2s;white-space:nowrap;text-transform:uppercase}
+  background:none;border:none;font-family:var(--fb);font-size:14px;font-weight:600;
+  letter-spacing:.2px;color:var(--dim);cursor:pointer;
+  transition:color .2s;white-space:nowrap}
 .nav-tab:hover{color:var(--w)}
 .nav-tab.active{color:var(--g)}
 .nav-icon{font-size:13px}
@@ -60,8 +71,8 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 .section.active{display:block}
 .section-header{margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid var(--border)}
 .section-title{font-family:var(--fd);font-size:34px;letter-spacing:2px;line-height:1}
-.section-sub{font-family:var(--fc);font-size:11px;font-weight:700;letter-spacing:2px;
-  color:var(--g);text-transform:uppercase;display:block;margin-top:4px}
+.section-sub{font-family:var(--fb);font-size:14px;font-weight:600;letter-spacing:.4px;
+  color:var(--g);display:block;margin-top:6px}
 
 /* LEADERBOARD */
 .lb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
@@ -110,7 +121,7 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
 .crest img{width:26px;height:26px;object-fit:contain}
 .crest.fb{font-family:var(--fc);font-size:9px;font-weight:800;color:var(--w);text-align:center;line-height:1}
-.team-nm{font-family:var(--fc);font-size:14px;font-weight:700;letter-spacing:.5px}
+.team-nm{font-family:var(--fb);font-size:16px;font-weight:600;letter-spacing:0}
 .score-center{text-align:center}
 .score-num{font-family:var(--fd);font-size:28px;letter-spacing:3px;line-height:1}
 .score-ft{font-family:var(--fc);font-size:10px;font-weight:700;letter-spacing:3px;color:var(--g);margin-top:1px}
@@ -171,7 +182,7 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 .charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 .chart-card{background:var(--glass);border:1px solid var(--border);border-radius:12px;
   padding:18px;backdrop-filter:blur(8px)}
-.chart-card-title{font-family:var(--fc);font-size:11px;font-weight:700;letter-spacing:3px;
+.chart-card-title{font-family:var(--fc);font-size:13px;font-weight:700;letter-spacing:1.5px;
   color:var(--dim);text-transform:uppercase;margin-bottom:14px}
 .bar-chart{display:flex;flex-direction:column;gap:10px}
 .bar-row{display:flex;align-items:center;gap:10px}
@@ -200,12 +211,12 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 /* RESPONSIVE */
 @media(max-width:700px){
   .header-pl{font-size:16px}.header-trophy{font-size:22px}
-  .nav-tab{padding:11px 10px;font-size:11px}.nav-icon,.ni{display:none}
+  .nav-tab{padding:11px 10px;font-size:13px}.nav-icon,.ni{display:none}
   .lb-grid{grid-template-columns:1fr}
   .lb-name{font-size:28px}.lb-val{font-size:30px}
   .season-strip{grid-template-columns:repeat(2,1fr)}
   .match-row{grid-template-columns:1fr 80px 1fr;padding:11px 12px}
-  .team-nm{font-size:12px}.score-num{font-size:22px}
+  .team-nm{font-size:14px}.score-num{font-size:22px}
   .crest{width:28px;height:28px}.crest img{width:22px;height:22px}
   .charts-grid{grid-template-columns:1fr}
   .score-rule{flex-wrap:wrap}.sr-eg{display:none}
@@ -213,7 +224,7 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
   .section-title{font-size:26px}
 }
 @media(max-width:380px){
-  .nav-tab{padding:11px 8px;font-size:10px;letter-spacing:.5px}
+  .nav-tab{padding:11px 8px;font-size:12px;letter-spacing:0}
 }
 
 /* LIVE TAB */
@@ -324,22 +335,23 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 }
 
 .pred-tnm {
-  font-family: var(--fc);
-  font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
+  font-family: var(--fb);
+  font-size: 16px; font-weight: 600; letter-spacing: 0;
+  color: var(--w);
 }
 
 .pred-scores-block { text-align: center; }
 
 .pred-actual-score {
   font-family: var(--fd);
-  font-size: 26px; letter-spacing: 3px; line-height: 1;
+  font-size: 28px; letter-spacing: 2px; line-height: 1;
   color: var(--g);
 }
 
 .pred-ft {
-  font-family: var(--fc);
-  font-size: 9px; font-weight: 700; letter-spacing: 3px;
-  color: var(--dim); margin-top: 1px;
+  font-family: var(--fb);
+  font-size: 13px; font-weight: 600; letter-spacing: 0;
+  color: var(--dim); margin-top: 4px;
 }
 
 .pred-right {
@@ -349,9 +361,10 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 }
 
 .pred-guess-label {
-  font-family: var(--fc);
-  font-size: 9px; font-weight: 700; letter-spacing: 3px;
+  font-family: var(--fb);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.4px;
   color: var(--dim);
+  text-transform: uppercase;
 }
 
 .pred-guess-score {
@@ -362,22 +375,12 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 @media(max-width:700px) {
   .pred-row { flex-direction: column; align-items: stretch; }
   .pred-right { flex-direction: row; align-items: center; justify-content: space-between; }
-  .pred-tnm { font-size: 11px; }
+  .pred-tnm { font-size: 15px; }
   .pred-actual-score { font-size: 20px; }
 }
 
-/* Arsenal bg — leaderboard only, injected via JS */
-#s-leaderboard .lb-arsenal-bg {
-  position: fixed; inset: 0; z-index: -1;
-  width: 100vw; height: 100vh;
-  background-size: cover; 
-  background-position: center center;
-  background-repeat: no-repeat;
-  filter: blur(6px) brightness(0.35) saturate(1.1);
-  transform: scale(1.1);
-  pointer-events: none;
-  transition: opacity 0.4s ease;
-}
+/* Photo bg class also used if an older leaderboard node remains */
+#s-leaderboard .lb-arsenal-bg { z-index: -2; }
 
 /* Rank number colors — visible on each card */
 .lb-card.rank-1 .lb-bg-num { color: rgba(245,197,24,0.18); }
@@ -388,76 +391,136 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 .live-banner{
   display:flex;justify-content:space-between;gap:16px;align-items:flex-start;
   background:var(--glass);border:1px solid var(--border);border-radius:12px;
-  padding:18px 20px;margin-bottom:16px;backdrop-filter:blur(10px)
+  padding:18px 20px;margin-bottom:16px;backdrop-filter:blur(14px)
 }
-.live-kicker{font-family:var(--fc);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--gold);text-transform:uppercase}
-.live-headline{font-family:var(--fd);font-size:28px;letter-spacing:1px;margin:4px 0}
-.live-sub{font-size:13px;color:var(--dim)}
+.live-banner-copy{min-width:0}
+.live-kicker{font-family:var(--fb);font-size:13px;font-weight:700;letter-spacing:.4px;color:var(--gold)}
+.live-headline{font-family:var(--fd);font-size:34px;letter-spacing:1px;margin:6px 0 10px}
+.live-sub{font-size:15px;color:var(--dim);font-weight:500}
 .live-pills{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
-.live-pill{font-family:var(--fc);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--dim);
-  border:1px solid var(--border);border-radius:999px;padding:4px 10px;white-space:nowrap}
+.live-pill{font-family:var(--fb);font-size:13px;font-weight:600;letter-spacing:0;color:var(--dim);
+  border:1px solid var(--border);border-radius:999px;padding:5px 12px;white-space:nowrap}
 .live-pill.on{color:var(--p);background:var(--g);border-color:var(--g)}
 .live-who{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.live-who .ptab{display:inline-flex;align-items:center}
+.live-who .ptab{display:inline-flex;align-items:center;font-size:14px;letter-spacing:.4px}
 .ptab.add{border-style:dashed}
 .ptab-x{margin-left:8px;opacity:.55;font-size:14px;line-height:1}
 .ptab-x:hover{opacity:1;color:var(--red)}
-.gw-switch{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
-.gw-select{flex:1;min-width:160px;max-width:240px;padding:8px 12px;background:var(--glass);
-  border:1px solid var(--border);border-radius:8px;color:var(--w);font-family:var(--fc);
-  font-size:14px;font-weight:800;letter-spacing:1px}
-.gw-btn{padding:8px 14px;background:var(--glass);border:1px solid var(--border);border-radius:8px;
-  font-family:var(--fc);font-size:12px;font-weight:800;letter-spacing:1px;color:var(--dim);cursor:pointer}
+.gw-board-wrap{margin-bottom:16px}
+.gw-board-label{font-family:var(--fb);font-size:14px;font-weight:700;color:var(--w);margin-bottom:8px}
+.gw-board{display:grid;grid-template-columns:repeat(19,minmax(0,1fr));gap:4px;margin-bottom:10px}
+.gw-chip{height:36px;border:1px solid var(--border);border-radius:6px;background:rgba(0,0,0,.28);
+  color:var(--w);font-family:var(--fb);font-size:13px;font-weight:700;cursor:pointer}
+.gw-chip:hover{border-color:rgba(255,255,255,.28)}
+.gw-chip.on{background:var(--gold);border-color:var(--gold);color:var(--p)}
+.gw-chip.has-picks:not(.on){box-shadow:inset 0 -3px 0 var(--g)}
+.gw-switch{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.gw-select{flex:1;min-width:180px;padding:10px 12px;background:var(--glass);
+  border:1px solid var(--border);border-radius:8px;color:var(--w);font-family:var(--fb);
+  font-size:15px;font-weight:600}
+.gw-btn{padding:10px 14px;background:var(--glass);border:1px solid var(--border);border-radius:8px;
+  font-family:var(--fb);font-size:14px;font-weight:700;color:var(--w);cursor:pointer}
+.gw-btn:disabled{opacity:.4;cursor:default}
 .gw-btn.active{background:var(--gold);border-color:var(--gold);color:var(--p)}
 .live-lb{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
-.live-lb-card{background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:10px 12px;
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.live-lb-card{background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:12px 14px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;backdrop-filter:blur(10px)}
 .live-lb-card.me{border-color:rgba(0,255,135,.35)}
 .live-rank{font-size:16px}
-.live-lb-name{font-family:var(--fd);font-size:18px;letter-spacing:1px;flex:1}
-.live-lb-pts{font-family:var(--fd);font-size:20px}
-.live-lb-ex{font-family:var(--fc);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--dim)}
+.live-lb-name{font-family:var(--fd);font-size:22px;letter-spacing:1px;flex:1}
+.live-lb-pts{font-family:var(--fd);font-size:22px}
+.live-lb-ex{font-family:var(--fb);font-size:13px;font-weight:600;color:var(--dim)}
 .live-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-.stat-chip{background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:12px}
-.stat-chip span{display:block;font-family:var(--fc);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
-.stat-chip strong{font-family:var(--fd);font-size:28px;color:var(--g);line-height:1.1}
-.stat-chip em{display:block;font-style:normal;font-size:12px;color:var(--dim);margin-top:4px}
+.stat-chip{background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:14px;backdrop-filter:blur(10px)}
+.stat-chip span{display:block;font-family:var(--fb);font-size:13px;font-weight:700;letter-spacing:.3px;color:var(--dim)}
+.stat-chip strong{font-family:var(--fd);font-size:32px;color:var(--g);line-height:1.1}
+.stat-chip em{display:block;font-style:normal;font-size:14px;color:var(--dim);margin-top:4px}
+.live-predict-head{display:flex;justify-content:space-between;align-items:flex-end;margin:4px 0 10px}
+#s-newseason .chart-card-title{font-family:var(--fb);font-size:18px;font-weight:700;letter-spacing:0;
+  text-transform:none;color:var(--w);margin-bottom:2px}
 .live-fixtures{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
-.lock-tag{font-family:var(--fc);font-size:10px;font-weight:800;letter-spacing:1px;color:var(--g);margin-top:4px}
+.lock-tag{font-family:var(--fb);font-size:13px;font-weight:700;color:var(--g);margin-top:4px}
 .lock-tag.hot{color:var(--gold)}
 .live-match.is-locked{opacity:.96}
 .live-predict{min-width:150px}
 .step-row{display:flex;align-items:center;gap:6px}
 .stepper{display:flex;align-items:center;background:rgba(255,255,255,.05);border-radius:8px;overflow:hidden;border:1px solid var(--border)}
 .stepper.disabled{opacity:.7}
-.step-btn{width:28px;height:32px;border:none;background:transparent;color:var(--w);cursor:pointer;font-size:16px}
+.step-btn{width:32px;height:36px;border:none;background:transparent;color:var(--w);cursor:pointer;font-size:18px}
 .step-btn:disabled{cursor:default;color:var(--dim)}
-.step-val{width:28px;height:32px;border:none;background:transparent;color:var(--w);text-align:center;
-  font-family:var(--fd);font-size:22px}
-.step-dash{font-family:var(--fd);font-size:22px;color:var(--dim)}
+.step-val{width:32px;height:36px;border:none;background:transparent;color:var(--w);text-align:center;
+  font-family:var(--fd);font-size:24px}
+.step-dash{font-family:var(--fd);font-size:24px;color:var(--dim)}
 .mini-btn{margin-top:6px;background:none;border:1px solid var(--border);color:var(--dim);border-radius:6px;
-  font-family:var(--fc);font-size:10px;font-weight:700;letter-spacing:1px;padding:4px 8px;cursor:pointer}
-.live-share,.live-recap{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+  font-family:var(--fb);font-size:12px;font-weight:700;padding:5px 9px;cursor:pointer}
+
+/* Airport / FIDS countdown */
+.fids{display:inline-flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap}
+.fids-label{font-family:var(--fm);font-size:12px;letter-spacing:2px;color:#f5c518;text-transform:uppercase}
+.fids-board{display:inline-flex;align-items:center;gap:8px}
+.fids-pair{display:inline-flex;align-items:center;gap:3px}
+.fids-cell{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  min-width:22px;height:32px;padding:0 2px;
+  background:linear-gradient(#1a1a22,#050508);
+  border:1px solid #2a2a33;border-radius:3px;
+  color:#ffe38a;font-family:var(--fm);font-size:20px;line-height:1;
+  box-shadow:inset 0 -12px 0 rgba(255,255,255,.04), 0 1px 0 #000;
+}
+.fids-cell::after{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.55)}
+.fids-unit{font-family:var(--fm);font-size:12px;letter-spacing:1px;color:#b9a46a;margin:0 2px 0 4px;text-transform:uppercase}
+.fids.lg .fids-label{font-size:14px;letter-spacing:3px}
+.fids.lg .fids-cell{min-width:34px;height:48px;font-size:32px;border-radius:4px}
+.fids.lg .fids-unit{font-size:16px}
+.fids.locked .fids-label{color:#ff8a80;letter-spacing:3px}
+.pred-scores-block .fids{justify-content:center}
+.fx-row .fids{margin-top:0}
+.fx-row .fids-cell{min-width:18px;height:26px;font-size:16px}
+.fx-row .fids-label{font-size:11px}
+
+.season-board{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:16px 16px 10px;margin-bottom:16px;backdrop-filter:blur(12px)}
+.season-board-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.season-scroll{max-height:min(70vh,760px);overflow:auto;border:1px solid var(--border);border-radius:10px;background:rgba(0,0,0,.22)}
+.fx-gw{border-bottom:1px solid var(--border)}
+.fx-gw:last-child{border-bottom:none}
+.fx-gw.is-current{background:rgba(245,197,24,.06)}
+.fx-gw-head{width:100%;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;
+  padding:10px 14px;background:rgba(12,0,18,.92);position:sticky;top:0;z-index:1;
+  border:0;color:var(--w);text-align:left;cursor:pointer;font-family:var(--fb)}
+.fx-gw-head strong{font-size:16px}
+.fx-gw-head span{font-size:14px;color:var(--dim)}
+.fx-gw-head em{margin-left:auto;font-style:normal;font-size:13px;color:var(--g);font-weight:600}
+.fx-row{width:100%;display:grid;grid-template-columns:minmax(120px,160px) 1fr auto;align-items:center;gap:10px;
+  padding:8px 14px;background:transparent;border:0;border-top:1px solid rgba(255,255,255,.05);
+  color:var(--w);text-align:left;cursor:pointer;font-family:var(--fb)}
+.fx-row:hover{background:rgba(255,255,255,.04)}
+.fx-when{font-size:13px;color:var(--dim);font-weight:600;white-space:nowrap}
+.fx-match{display:flex;align-items:center;gap:8px;min-width:0;font-size:15px;font-weight:600}
+.fx-home,.fx-away{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fx-vs{color:var(--gold);font-family:var(--fm);font-size:12px}
+.fx-score{font-family:var(--fd);font-size:20px;color:var(--g);letter-spacing:1px}
+
+.live-share,.live-recap{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;backdrop-filter:blur(12px)}
 .live-share{display:flex;justify-content:space-between;gap:16px;align-items:flex-end}
-.muted{color:var(--dim);font-size:13px;line-height:1.5;margin-top:6px}
+.muted{color:var(--dim);font-size:15px;line-height:1.55;margin-top:6px}
 .share-actions{display:flex;gap:8px;flex-wrap:wrap}
-.btn-g,.btn-ghost{font-family:var(--fc);font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+.btn-g,.btn-ghost{font-family:var(--fb);font-size:13px;font-weight:700;letter-spacing:.3px;text-transform:none;
   padding:9px 14px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
 .btn-g{background:var(--g);color:var(--p);border:none}
 .btn-ghost{background:transparent;color:var(--w);border:1px solid var(--border)}
-.recap-body{white-space:pre-wrap;font-family:var(--fc);font-size:14px;line-height:1.5;color:var(--w);
+.recap-body{white-space:pre-wrap;font-family:var(--fb);font-size:15px;line-height:1.55;color:var(--w);
   background:rgba(0,0,0,.2);border-radius:8px;padding:12px;margin:10px 0}
 .live-settings{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:24px}
-.live-settings summary{cursor:pointer;font-family:var(--fc);font-weight:800;letter-spacing:1px;color:var(--gold)}
-.live-settings label{display:block;margin:12px 0;font-size:12px;color:var(--dim)}
+.live-settings summary{cursor:pointer;font-family:var(--fb);font-weight:700;color:var(--gold);font-size:15px}
+.live-settings label{display:block;margin:12px 0;font-size:14px;color:var(--dim)}
 .live-settings input,.live-settings textarea{
   width:100%;margin-top:6px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);
-  background:rgba(0,0,0,.25);color:var(--w);font-family:var(--fb);font-size:14px}
+  background:rgba(0,0,0,.25);color:var(--w);font-family:var(--fb);font-size:15px}
 .live-settings .check{display:flex;align-items:center;gap:8px}
 .live-settings .check input{width:auto}
 .form-embed iframe{width:100%;min-height:520px;border:0;border-radius:12px;margin-bottom:24px;background:#fff}
 .live-toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;
-  background:var(--g);color:var(--p);font-family:var(--fc);font-weight:800;letter-spacing:1px;
+  background:var(--g);color:var(--p);font-family:var(--fb);font-weight:700;
   padding:10px 16px;border-radius:999px;z-index:200;transition:opacity .2s,transform .2s;pointer-events:none}
 .live-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .extra-card{grid-column:1/-1}
@@ -466,11 +529,17 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 .extra-name{font-family:var(--fd);font-size:20px;letter-spacing:1px}
 .extra-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
 .extra-grid b{display:block;font-family:var(--fd);font-size:24px;color:var(--g)}
-.extra-grid span{font-family:var(--fc);font-size:11px;letter-spacing:1px;color:var(--dim)}
-.extra-miss{font-size:12px;color:var(--dim)}
+.extra-grid span{font-family:var(--fb);font-size:13px;color:var(--dim)}
+.extra-miss{font-size:14px;color:var(--dim)}
+@media(max-width:900px){
+  .gw-board{grid-template-columns:repeat(10,minmax(0,1fr))}
+}
 @media(max-width:700px){
-  .live-banner,.live-share{flex-direction:column;align-items:stretch}
+  .live-banner,.live-share,.season-board-top{flex-direction:column;align-items:stretch}
   .live-pills{align-items:flex-start}
   .live-lb,.live-stats,.extra-grid{grid-template-columns:1fr}
-  .live-headline{font-size:22px}
+  .live-headline{font-size:26px}
+  .gw-board{grid-template-columns:repeat(8,minmax(0,1fr))}
+  .fx-row{grid-template-columns:1fr;gap:4px}
+  .fids.lg .fids-cell{min-width:28px;height:40px;font-size:26px}
 }

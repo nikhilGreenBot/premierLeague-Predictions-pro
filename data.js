@@ -165,19 +165,37 @@ function liveLeaderboard(players, matches, predictions) {
   }).sort((a,b) => b.totalPts - a.totalPts || b.totalExact - a.totalExact);
 }
 
+function pad2(n) {
+  return String(Math.max(0, Number(n) || 0)).padStart(2, '0');
+}
+
+function countdownParts(iso, now = Date.now()) {
+  const diff = new Date(iso).getTime() - now;
+  if (!Number.isFinite(diff) || diff <= 0) {
+    return { locked: true, d: 0, h: 0, m: 0, s: 0, cells: [], label: 'LOCKED', ms: diff };
+  }
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  const dayWidth = d >= 100 ? 3 : 2;
+  const cells = d > 0
+    ? [{ v: String(d).padStart(dayWidth, '0'), u: 'd' }, { v: pad2(h), u: 'h' }]
+    : h > 0
+      ? [{ v: pad2(h), u: 'h' }, { v: pad2(m), u: 'm' }]
+      : [{ v: pad2(m), u: 'm' }, { v: pad2(s), u: 's' }];
+  const label = d > 0 ? `Locks in ${d}d ${h}h` : h > 0 ? `Locks in ${h}h ${m}m` : `Locks in ${m}m ${s}s`;
+  return { locked: false, d, h, m, s, cells, label, ms: diff };
+}
+
 function formatKickoff(iso, now = Date.now()) {
   const t = new Date(iso);
-  const diff = t.getTime() - now;
   const when = t.toLocaleString('en-GB', {
     weekday: 'short', day: 'numeric', month: 'short',
     hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London',
   }) + ' UK';
-  if (diff <= 0) return { when, locked: true, label: 'LOCKED', ms: diff };
-  const d = Math.floor(diff / 86400000);
-  const h = Math.floor((diff % 86400000) / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  const label = d > 0 ? `Locks in ${d}d ${h}h` : h > 0 ? `Locks in ${h}h ${m}m` : `Locks in ${m}m`;
-  return { when, locked: false, label, ms: diff };
+  const parts = countdownParts(iso, now);
+  return { when, locked: parts.locked, label: parts.label, ms: parts.ms, parts };
 }
 
 function slugifyName(name) {

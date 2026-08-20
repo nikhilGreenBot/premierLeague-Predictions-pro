@@ -70,14 +70,6 @@ tabs.forEach(t => t.addEventListener('click', () => goTo(t.dataset.tab)));
 const RENDERERS = {
 
   leaderboard() {
-    // Inject Arsenal bg image (base64 embedded, no 403 issues)
-    if (!document.getElementById('arsenalBg')) {
-      const div = document.createElement('div');
-      div.id = 'arsenalBg';
-      div.className = 'lb-arsenal-bg';
-      div.style.backgroundImage = `url(${ARSENAL_BG})`;
-      document.getElementById('s-leaderboard').prepend(div);
-    }
     const board  = getLeaderboard();
     const maxPts = board[0].totalPts;
     document.getElementById('lbGrid').innerHTML = board.map((p, i) => `
@@ -328,7 +320,17 @@ const RENDERERS = {
 };
 
 // ── BOOT ──
+function ensureEplBg() {
+  if (document.getElementById('eplBg') || typeof ARSENAL_BG === 'undefined') return;
+  const div = document.createElement('div');
+  div.id = 'eplBg';
+  div.className = 'epl-photo-bg';
+  div.style.backgroundImage = `url(${ARSENAL_BG})`;
+  document.body.prepend(div);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
+  ensureEplBg();
   bootLiveSeason();
   done.add('leaderboard');
   RENDERERS.leaderboard();

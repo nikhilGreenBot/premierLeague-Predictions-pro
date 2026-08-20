@@ -35,4 +35,12 @@ assert(seasonFormStreak('dadhichi').streak === 0, 'Dadhichi blanked GW38');
 assert(slugifyName('New Friend') === 'new-friend', 'slugify names');
 assert(getResult(2, 1) === 'H' && getResult(1, 1) === 'D' && getResult(0, 2) === 'A', 'result codes');
 
+const twoDays = countdownParts('2026-08-21T19:00:00.000Z', Date.parse('2026-08-19T07:00:00.000Z'));
+assert(twoDays.d === 2 && twoDays.h === 12, 'countdown 2d 12h');
+assert(twoDays.label === 'Locks in 2d 12h', 'airport label days');
+assert(twoDays.cells[0].u === 'd' && twoDays.cells[0].v === '02', 'day cells padded');
+assert(countdownParts('2026-08-21T19:00:00.000Z', Date.parse('2026-08-22T00:00:00.000Z')).locked, 'past kickoff is locked');
+const mins = countdownParts('2026-08-21T19:00:00.000Z', Date.parse('2026-08-21T18:58:05.000Z'));
+assert(mins.m === 1 && mins.s === 55 && mins.cells[1].u === 's', 'final minutes show seconds');
+
 console.log('All scoring tests passed.');

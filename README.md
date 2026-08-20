@@ -48,9 +48,10 @@ The season opens **Friday 21 August 2026, 20:00 UK** (Arsenal vs Coventry). Frie
 
 1. Open the **2026/27** tab
 2. Tap your name (or **Add friend**)
-3. Enter GW1 scorelines — they **lock automatically at kickoff**
-4. Tap **Copy league code** and paste it in the group chat
-5. Everyone else taps **Import code** so the board is shared
+3. Browse all **38 gameweeks / 380 matches** (GW chips + full fixture list)
+4. Enter scorelines — they **lock automatically at kickoff** (live airport-style countdown)
+5. Tap **Copy league code** and paste it in the group chat
+6. Everyone else taps **Import code** so the board is shared
 
 Optional: set a PIN in Settings so nobody edits your picks. Live scores sync automatically from ESPN (no token). Paste Firebase config if you want realtime sync instead of share codes.
 

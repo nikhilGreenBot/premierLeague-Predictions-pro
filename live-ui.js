@@ -3,6 +3,7 @@
 let liveGw = null;
 let liveTimer = null;
 let liveApiTimer = null;
+let liveShowSeason = true;
 
 function currentLivePlayers() {
   return LiveStore.state.players;
@@ -30,6 +31,65 @@ function toast(msg) {
   setTimeout(() => el.classList.remove('show'), 1800);
 }
 
+function fidsHtml(iso, prefix = 'LOCKS IN', size = '') {
+  const c = countdownParts(iso);
+  const sizeCls = size ? ` ${size}` : '';
+  if (c.locked) {
+    return `<div class="fids locked${sizeCls}" data-countdown="${iso}" data-prefix="${prefix}"><span class="fids-label">LOCKED</span></div>`;
+  }
+  const board = c.cells.map(x => {
+    const digits = [...String(x.v)].map(ch => `<span class="fids-cell">${ch}</span>`).join('');
+    return `<span class="fids-pair">${digits}<span class="fids-unit">${x.u}</span></span>`;
+  }).join('');
+  return `<div class="fids${sizeCls}" data-countdown="${iso}" data-prefix="${prefix}"><span class="fids-label">${prefix}</span><span class="fids-board">${board}</span></div>`;
+}
+
+function tickFids(root = document) {
+  root.querySelectorAll('[data-countdown]').forEach(el => {
+    const iso = el.dataset.countdown;
+    const prefix = el.dataset.prefix || 'LOCKS IN';
+    const size = el.classList.contains('lg') ? 'lg' : '';
+    const tmp = document.createElement('div');
+    tmp.innerHTML = fidsHtml(iso, prefix, size);
+    const neu = tmp.firstElementChild;
+    if (!neu) return;
+    if (el.className === neu.className && el.innerHTML === neu.innerHTML) return;
+    const wasLocked = el.classList.contains('locked');
+    el.className = neu.className;
+    el.innerHTML = neu.innerHTML;
+    if (!wasLocked && neu.classList.contains('locked')) el.dataset.justLocked = '1';
+  });
+}
+
+function gwWindowLabel(gw, matches) {
+  const rows = matchesForGw(gw, matches);
+  if (!rows.length) return '';
+  const fmt = (iso) => new Date(iso).toLocaleString('en-GB', {
+    weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London',
+  });
+  const a = fmt(rows[0].kickoff);
+  const b = fmt(rows[rows.length - 1].kickoff);
+  return a === b ? a : `${a} – ${b}`;
+}
+
+function fxWhen(iso) {
+  return new Date(iso).toLocaleString('en-GB', {
+    weekday: 'short', day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London',
+  });
+}
+
+function jumpToGw(g) {
+  liveGw = Number(g);
+  renderLiveSeason();
+  requestAnimationFrame(() => {
+    document.getElementById('livePredict')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const sc = document.querySelector('.season-scroll');
+    const cur = document.querySelector('.fx-gw.is-current');
+    if (sc && cur) sc.scrollTop = Math.max(0, cur.offsetTop - 8);
+  });
+}
+
 function stepper(value, disabled, attr) {
   const v = value == null ? '' : value;
   return `<div class="stepper ${disabled ? 'disabled' : ''}">
@@ -51,23 +111,31 @@ function renderLiveSeason() {
   const preds = LiveStore.state.predictions;
   const board = liveLeaderboard(players, matches, preds);
   const meRow = board.find(p => p.id === me) || board[0];
-  const firstKo = formatKickoff(SEASON_26.kickoff);
   const scoresOn = !!FootballAPI.lastSync && !FootballAPI.lastError;
-  const gws = [...new Set(matches.map(m => m.gw))];
+  const gws = [...new Set(matches.map(m => m.gw))].sort((a, b) => a - b);
 
   const predictedCount = gwMatches.filter(m => (preds[me] || {})[m.id]).length;
   const lockedCount = gwMatches.filter(m => !canEditMatch(m)).length;
+  const nextOpen = matches
+    .filter(m => canEditMatch(m))
+    .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff))[0];
+  const picksByGw = {};
+  gws.forEach(g => {
+    const rows = matchesForGw(g, matches);
+    picksByGw[g] = rows.filter(m => (preds[me] || {})[m.id]).length;
+  });
 
   wrap.innerHTML = `
     <div class="live-banner">
-      <div>
-        <div class="live-kicker">Season ${SEASON_26.label} · Gameweek ${gw}</div>
-        <div class="live-headline">${firstKo.locked ? 'Season underway' : 'First whistle: ' + firstKo.when}</div>
-        <div class="live-sub">${predictedCount}/${gwMatches.length} predicted · ${lockedCount} locked · ${matches.length} fixtures this season</div>
+      <div class="live-banner-copy">
+        <div class="live-kicker">Season ${SEASON_26.label} · ${matches.length} matches · 38 gameweeks</div>
+        <div class="live-headline">${nextOpen ? `${nextOpen.home} vs ${nextOpen.away}` : 'Season underway'}</div>
+        ${nextOpen ? fidsHtml(nextOpen.kickoff, 'LOCKS IN', 'lg') : '<div class="fids locked lg"><span class="fids-label">KICKOFF PASSED</span></div>'}
+        <div class="live-sub">GW${gw}: ${predictedCount}/${gwMatches.length} predicted · ${lockedCount} locked · ${gwWindowLabel(gw, matches)}</div>
       </div>
       <div class="live-pills">
         <span class="live-pill ${scoresOn ? 'on' : ''}">${FootballAPI.lastError ? 'Scores offline' : 'Live scores on'}</span>
-        <span class="live-pill">${FootballAPI.lastSync ? 'Synced ' + new Date(FootballAPI.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : (FootballAPI.lastError || 'ESPN auto-sync · all 38 GWs bundled')}</span>
+        <span class="live-pill">${FootballAPI.lastSync ? 'Synced ' + new Date(FootballAPI.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : (FootballAPI.lastError || 'ESPN auto-sync')}</span>
       </div>
     </div>
 
@@ -76,12 +144,18 @@ function renderLiveSeason() {
       <button class="ptab add" data-add-player>+ Add friend</button>
     </div>
 
-    <div class="gw-switch">
-      <button type="button" class="gw-btn" data-gw-step="-1" ${gw<=gws[0]?'disabled':''}>‹</button>
-      <select class="gw-select" id="gwSelect">
-        ${gws.map(g => `<option value="${g}" ${g===gw?'selected':''}>Gameweek ${g}</option>`).join('')}
-      </select>
-      <button type="button" class="gw-btn" data-gw-step="1" ${gw>=gws[gws.length-1]?'disabled':''}>›</button>
+    <div class="gw-board-wrap">
+      <div class="gw-board-label">Jump to gameweek</div>
+      <div class="gw-board" role="list">
+        ${gws.map(g => `<button type="button" class="gw-chip ${g===gw?'on':''} ${picksByGw[g] ? 'has-picks' : ''}" data-gw="${g}" title="GW${g} · ${picksByGw[g] || 0}/10 predicted">${g}</button>`).join('')}
+      </div>
+      <div class="gw-switch">
+        <button type="button" class="gw-btn" data-gw-step="-1" ${gw<=gws[0]?'disabled':''}>‹ Prev</button>
+        <select class="gw-select" id="gwSelect">
+          ${gws.map(g => `<option value="${g}" ${g===gw?'selected':''}>Gameweek ${g} · ${gwWindowLabel(g, matches)}</option>`).join('')}
+        </select>
+        <button type="button" class="gw-btn" data-gw-step="1" ${gw>=gws[gws.length-1]?'disabled':''}>Next ›</button>
+      </div>
     </div>
 
     <div class="live-lb">
@@ -99,6 +173,12 @@ function renderLiveSeason() {
       <div class="stat-chip"><span>⭐ Exact</span><strong>${meRow ? meRow.totalExact : 0}</strong><em>this season</em></div>
     </div>
 
+    <div class="live-predict-head" id="livePredict">
+      <div>
+        <div class="chart-card-title">Predict GW${gw}</div>
+        <p class="muted">${gwWindowLabel(gw, matches)} · 10 matches this gameweek</p>
+      </div>
+    </div>
     <div class="live-fixtures">
       ${gwMatches.map((m, i) => {
         const pred = (preds[me] || {})[m.id];
@@ -118,7 +198,7 @@ function renderLiveSeason() {
             <div class="pred-scores-block">
               ${hasResult
                 ? `<div class="pred-actual-score">${m.actualHome}–${m.actualAway}</div><div class="pred-ft">${m.status === 'IN_PLAY' || m.status === 'PAUSED' ? 'LIVE' : 'RESULT'}</div>`
-                : `<div class="pred-ft">${ko.when}</div><div class="lock-tag ${ko.locked?'hot':''}">${ko.label}</div>`}
+                : `<div class="pred-ft">${ko.when}</div>${fidsHtml(m.kickoff, 'LOCKS IN')}`}
             </div>
             <div class="pred-team right">${crest(m.away)}<span class="pred-tnm">${m.away}</span></div>
           </div>
@@ -134,6 +214,38 @@ function renderLiveSeason() {
           </div>
         </div>`;
       }).join('')}
+    </div>
+
+    <div class="season-board">
+      <div class="season-board-top">
+        <div>
+          <div class="chart-card-title">All ${matches.length} fixtures</div>
+          <p class="muted">Every gameweek in 2026/27. Tap a match to open that GW’s prediction card.</p>
+        </div>
+        <button type="button" class="btn-ghost" data-toggle-season>${liveShowSeason ? 'Hide list' : 'Show full season'}</button>
+      </div>
+      ${liveShowSeason ? `<div class="season-scroll">
+        ${gws.map(g => {
+          const rows = matchesForGw(g, matches);
+          return `<section class="fx-gw ${g===gw?'is-current':''}">
+            <button type="button" class="fx-gw-head" data-jump-gw="${g}">
+              <strong>Gameweek ${g}</strong>
+              <span>${gwWindowLabel(g, matches)}</span>
+              <em>${picksByGw[g] || 0}/${rows.length} predicted</em>
+            </button>
+            ${rows.map(m => {
+              const hasResult = m.actualHome != null && m.actualAway != null;
+              return `<button type="button" class="fx-row" data-jump-gw="${m.gw}">
+                <span class="fx-when">${fxWhen(m.kickoff)}</span>
+                <span class="fx-match"><span class="fx-home">${m.home}</span><span class="fx-vs">v</span><span class="fx-away">${m.away}</span></span>
+                ${hasResult
+                  ? `<span class="fx-score">${m.actualHome}–${m.actualAway}</span>`
+                  : fidsHtml(m.kickoff, 'LOCKS IN')}
+              </button>`;
+            }).join('')}
+          </section>`;
+        }).join('')}
+      </div>` : ''}
     </div>
 
     <div class="live-share">
@@ -209,6 +321,19 @@ function renderLiveSeason() {
       if (gws.includes(next)) { liveGw = next; renderLiveSeason(); }
     });
   });
+  wrap.querySelectorAll('.gw-chip[data-gw]').forEach(btn => {
+    btn.addEventListener('click', () => { liveGw = Number(btn.dataset.gw); renderLiveSeason(); });
+  });
+  wrap.querySelectorAll('[data-jump-gw]').forEach(btn => {
+    btn.addEventListener('click', () => jumpToGw(btn.dataset.jumpGw));
+  });
+  wrap.querySelector('[data-toggle-season]')?.addEventListener('click', () => {
+    liveShowSeason = !liveShowSeason;
+    renderLiveSeason();
+  });
+  const sc = wrap.querySelector('.season-scroll');
+  const cur = wrap.querySelector('.fx-gw.is-current');
+  if (sc && cur) sc.scrollTop = Math.max(0, cur.offsetTop - 8);
   wrap.querySelectorAll('.step-row').forEach(row => bindStepper(row, me, gwMatches));
   wrap.querySelectorAll('[data-enter-result]').forEach(btn => {
     btn.addEventListener('click', () => enterResult(btn.dataset.enterResult));
@@ -231,9 +356,11 @@ function renderLiveSeason() {
   liveTimer = setInterval(() => {
     const section = document.getElementById('s-newseason');
     if (!section?.classList.contains('active')) return;
-    if (wrap.contains(document.activeElement)) return;
-    renderLiveSeason();
-  }, 60000);
+    tickFids(wrap);
+    if (wrap.querySelector('[data-just-locked="1"]') && !wrap.contains(document.activeElement)) {
+      renderLiveSeason();
+    }
+  }, 1000);
 }
 
 function bindStepper(row, playerId, gwMatches) {
