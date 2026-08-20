@@ -19,11 +19,47 @@ function crest(name) {
 const tabs      = [...document.querySelectorAll('.nav-tab')];
 const indicator = document.getElementById('navIndicator');
 const order     = tabs.map(t => t.dataset.tab);
-let   curId     = 'leaderboard';
-let   curIdx    = 0;
-const done      = new Set();
+let   seasonId  = '2026-27';
+let   pageId    = 'predictions';
+let   curId     = 'predictions';
+let   curIdx    = order.indexOf('predictions');
+
+function isLiveSeason() {
+  return seasonId === '2026-27';
+}
+
+function playerColor(id) {
+  return COLORS[id] || '#7ae7c7';
+}
+
+function setSectionCopy(id, title, sub) {
+  const sec = document.getElementById('s-' + id);
+  if (!sec) return;
+  const h = sec.querySelector('.section-title');
+  const s = sec.querySelector('.section-sub');
+  if (h) h.textContent = title;
+  if (s) s.textContent = sub;
+}
+
+function updateSeasonChrome() {
+  document.body.classList.toggle('season-live', isLiveSeason());
+  document.body.classList.toggle('season-archive', !isLiveSeason());
+  document.querySelectorAll('.season-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.season === seasonId);
+  });
+  const num = document.querySelector('.header-season-num');
+  const champ = document.querySelector('.header-champion');
+  if (isLiveSeason()) {
+    if (num) num.textContent = '2026/27';
+    if (champ) champ.textContent = '⚡ Live season';
+  } else {
+    if (num) num.textContent = '2025/26';
+    if (champ) champ.textContent = '🔴 Arsenal Champions';
+  }
+}
 
 function moveIndicator(tab) {
+  if (!tab || !indicator) return;
   const ni = document.querySelector('.nav-inner');
   const tr = tab.getBoundingClientRect();
   const nr = ni.getBoundingClientRect();
@@ -31,45 +67,78 @@ function moveIndicator(tab) {
   indicator.style.width = tr.width + 'px';
 }
 
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(sec => {
+    sec.classList.toggle('active', sec.id === 's-' + id);
+    if (sec.id !== 's-' + id) sec.style.cssText = '';
+  });
+}
+
 function goTo(id) {
   const idx = order.indexOf(id);
+  if (idx < 0) return;
   const dir = idx > curIdx ? 1 : -1;
   const from = document.getElementById('s-' + curId);
   const to   = document.getElementById('s-' + id);
-  if (!to || from === to) return;
+  if (!to) return;
 
-  from.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-  from.style.opacity    = '0';
-  from.style.transform  = `translateX(${dir * -30}px)`;
-
-  setTimeout(() => {
-    from.classList.remove('active');
-    from.style.cssText = '';
-    to.classList.add('active');
-    to.style.opacity   = '0';
-    to.style.transform = `translateX(${dir * 30}px)`;
-    to.style.transition = 'none';
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      to.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-      to.style.opacity    = '1';
-      to.style.transform  = 'translateX(0)';
-    }));
-  }, 250);
+  if (from && from !== to) {
+    from.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+    from.style.opacity    = '0';
+    from.style.transform  = `translateX(${dir * -30}px)`;
+    setTimeout(() => {
+      from.classList.remove('active');
+      from.style.cssText = '';
+      to.classList.add('active');
+      to.style.opacity   = '0';
+      to.style.transform = `translateX(${dir * 30}px)`;
+      to.style.transition = 'none';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        to.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+        to.style.opacity    = '1';
+        to.style.transform  = 'translateX(0)';
+      }));
+    }, 180);
+  } else {
+    showSection(id);
+  }
 
   tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === id));
   moveIndicator(tabs[idx]);
   curId  = id;
   curIdx = idx;
-  if (!done.has(id)) { done.add(id); RENDERERS[id](); }
-  else if (id === 'newseason') RENDERERS.newseason();
+  pageId = id;
+  renderCurrent();
+}
+
+function setSeason(id) {
+  if (seasonId === id) return;
+  seasonId = id;
+  updateSeasonChrome();
+  renderCurrent();
+}
+
+function renderCurrent() {
+  updateSeasonChrome();
+  if (isLiveSeason()) {
+    if (LIVE_PAGES[pageId]) LIVE_PAGES[pageId]();
+  } else if (RENDERERS[pageId]) {
+    RENDERERS[pageId]();
+  }
+  const activeTab = tabs.find(t => t.dataset.tab === pageId);
+  moveIndicator(activeTab || tabs[curIdx]);
 }
 
 tabs.forEach(t => t.addEventListener('click', () => goTo(t.dataset.tab)));
+document.querySelectorAll('.season-tab').forEach(btn => {
+  btn.addEventListener('click', () => setSeason(btn.dataset.season));
+});
 
 // ── ALL RENDERERS ──
 const RENDERERS = {
 
   leaderboard() {
+    setSectionCopy('leaderboard', 'Season Leaderboard', '2025/26 final standings · 38 gameweeks');
     const board  = getLeaderboard();
     const maxPts = board[0].totalPts;
     document.getElementById('lbGrid').innerHTML = board.map((p, i) => `
@@ -87,12 +156,19 @@ const RENDERERS = {
         </div>
         <div class="lb-bar"><div class="lb-bar-fill" style="width:0" data-w="${Math.round(p.totalPts/maxPts*100)}"></div></div>
       </div>`).join('');
+    const strip = document.getElementById('seasonStrip');
+    if (strip) strip.innerHTML = `
+      <div class="strip-item"><span class="strip-val">380</span><span class="strip-lbl">Matches</span></div>
+      <div class="strip-item"><span class="strip-val">931</span><span class="strip-lbl">Goals</span></div>
+      <div class="strip-item"><span class="strip-val">Haaland</span><span class="strip-lbl">Top Scorer</span></div>
+      <div class="strip-item"><span class="strip-val">Arsenal</span><span class="strip-lbl">Champions</span></div>`;
     setTimeout(() => {
-      document.querySelectorAll('.lb-bar-fill').forEach(el => el.style.width = el.dataset.w + '%');
+      document.querySelectorAll('#s-leaderboard .lb-bar-fill').forEach(el => el.style.width = el.dataset.w + '%');
     }, 60);
   },
 
   results() {
+    setSectionCopy('results', 'GW38 Results', '24 May 2026 · Final day');
     document.getElementById('matchesList').innerHTML = GW38_MATCHES.map((m, i) => `
       <div class="match-row" style="animation-delay:${i*0.04}s">
         <div class="team-side">${crest(m.home)}<span class="team-nm">${m.home}</span></div>
@@ -105,6 +181,7 @@ const RENDERERS = {
   },
 
   predictions() {
+    setSectionCopy('predictions', 'Predictions', 'GW38 — all predictions vs actual');
     let pid = 'parth';
     const wrap = document.getElementById('predWrap');
     function buildTable() {
@@ -148,6 +225,7 @@ const RENDERERS = {
   },
 
   history() {
+    setSectionCopy('history', 'Season History', '2025/26 points progression · 38 gameweeks');
     const gws  = [1,5,10,15,20,25,30,35,38];
     const data = {
       parth:    [8,27,60,95,130,165,196,231,236],
@@ -214,6 +292,7 @@ const RENDERERS = {
   },
 
   scoring() {
+    setSectionCopy('scoring', 'Scoring Rules', 'Exact 3 · correct result 1 · miss 0');
     document.getElementById('scoringContent').innerHTML = `
       <div class="score-rule gold">
         <div class="sr-pts">3</div>
@@ -242,6 +321,7 @@ const RENDERERS = {
   },
 
   charts() {
+    setSectionCopy('charts', 'Stats & Charts', '2025/26 season breakdown');
     const board  = getLeaderboard();
     const maxPts = board[0].totalPts;
     const maxEx  = Math.max(...board.map(p=>p.totalExact));
@@ -310,13 +390,21 @@ const RENDERERS = {
         <div class="chart-card-title">Streaks &amp; nearest miss · GW38</div>
         ${extras}
       </div>`;
-    setTimeout(() => document.querySelectorAll('.bar-fill').forEach(el => el.style.width = el.dataset.w + '%'), 60);
+    setTimeout(() => document.querySelectorAll('#s-charts .bar-fill').forEach(el => el.style.width = el.dataset.w + '%'), 60);
   },
 
-  newseason() {
-    renderLiveSeason();
-  },
+};
 
+const LIVE_PAGES = {
+  leaderboard() { renderLiveLeaderboardPage(); },
+  results() { renderLiveResultsPage(); },
+  predictions() { renderLiveSeason(); },
+  history() { renderLiveHistoryPage(); },
+  scoring() {
+    RENDERERS.scoring();
+    setSectionCopy('scoring', 'Scoring Rules', '2026/27 · exact 3 · correct result 1 · miss 0');
+  },
+  charts() { renderLiveChartsPage(); },
 };
 
 // ── BOOT ──
@@ -332,7 +420,8 @@ function ensureEplBg() {
 window.addEventListener('DOMContentLoaded', () => {
   ensureEplBg();
   bootLiveSeason();
-  done.add('leaderboard');
-  RENDERERS.leaderboard();
-  requestAnimationFrame(() => moveIndicator(tabs[0]));
+  updateSeasonChrome();
+  showSection(pageId);
+  renderCurrent();
+  requestAnimationFrame(() => moveIndicator(tabs.find(t => t.dataset.tab === pageId)));
 });

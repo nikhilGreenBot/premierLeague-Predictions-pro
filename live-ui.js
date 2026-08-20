@@ -81,12 +81,13 @@ function fxWhen(iso) {
 
 function jumpToGw(g) {
   liveGw = Number(g);
+  if (typeof goTo === 'function') {
+    goTo('predictions');
+    return;
+  }
   renderLiveSeason();
   requestAnimationFrame(() => {
     document.getElementById('livePredict')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    const sc = document.querySelector('.season-scroll');
-    const cur = document.querySelector('.fx-gw.is-current');
-    if (sc && cur) sc.scrollTop = Math.max(0, cur.offsetTop - 8);
   });
 }
 
@@ -102,6 +103,9 @@ function stepper(value, disabled, attr) {
 function renderLiveSeason() {
   const wrap = document.getElementById('liveApp');
   if (!wrap) return;
+  if (typeof setSectionCopy === 'function') {
+    setSectionCopy('predictions', 'Predictions', '2026/27 · all 38 gameweeks · locks at kickoff');
+  }
   const matches = liveMatches();
   if (liveGw == null) liveGw = getActiveGameweek(Date.now(), matches);
   const gw = liveGw;
@@ -109,8 +113,6 @@ function renderLiveSeason() {
   const me = LiveStore.state.currentPlayerId;
   const players = currentLivePlayers();
   const preds = LiveStore.state.predictions;
-  const board = liveLeaderboard(players, matches, preds);
-  const meRow = board.find(p => p.id === me) || board[0];
   const scoresOn = !!FootballAPI.lastSync && !FootballAPI.lastError;
   const gws = [...new Set(matches.map(m => m.gw))].sort((a, b) => a - b);
 
@@ -158,21 +160,6 @@ function renderLiveSeason() {
       </div>
     </div>
 
-    <div class="live-lb">
-      ${board.map((p,i) => `<div class="live-lb-card ${p.id===me?'me':''}">
-        <span class="live-rank">${['🥇','🥈','🥉'][i] || (i+1)}</span>
-        <span class="live-lb-name">${p.name}</span>
-        <span class="live-lb-pts" style="color:${COLORS[p.id]||'var(--g)'}">${p.totalPts} pts</span>
-        <span class="live-lb-ex">${p.totalExact} exact</span>
-      </div>`).join('') || '<div class="muted">No scored matches yet — predict GW1 before Friday.</div>'}
-    </div>
-
-    <div class="live-stats">
-      <div class="stat-chip"><span>🔥 Streak</span><strong>${meRow ? meRow.bestRun : 0}</strong><em>scoring run</em></div>
-      <div class="stat-chip"><span>🎯 Nearest miss</span><strong>${meRow && meRow.bestMiss ? meRow.bestMiss.goalDiff : '—'}</strong><em>${meRow && meRow.bestMiss ? meRow.bestMiss.match.home + ' vs ' + meRow.bestMiss.match.away : 'waiting on results'}</em></div>
-      <div class="stat-chip"><span>⭐ Exact</span><strong>${meRow ? meRow.totalExact : 0}</strong><em>this season</em></div>
-    </div>
-
     <div class="live-predict-head" id="livePredict">
       <div>
         <div class="chart-card-title">Predict GW${gw}</div>
@@ -214,38 +201,6 @@ function renderLiveSeason() {
           </div>
         </div>`;
       }).join('')}
-    </div>
-
-    <div class="season-board">
-      <div class="season-board-top">
-        <div>
-          <div class="chart-card-title">All ${matches.length} fixtures</div>
-          <p class="muted">Every gameweek in 2026/27. Tap a match to open that GW’s prediction card.</p>
-        </div>
-        <button type="button" class="btn-ghost" data-toggle-season>${liveShowSeason ? 'Hide list' : 'Show full season'}</button>
-      </div>
-      ${liveShowSeason ? `<div class="season-scroll">
-        ${gws.map(g => {
-          const rows = matchesForGw(g, matches);
-          return `<section class="fx-gw ${g===gw?'is-current':''}">
-            <button type="button" class="fx-gw-head" data-jump-gw="${g}">
-              <strong>Gameweek ${g}</strong>
-              <span>${gwWindowLabel(g, matches)}</span>
-              <em>${picksByGw[g] || 0}/${rows.length} predicted</em>
-            </button>
-            ${rows.map(m => {
-              const hasResult = m.actualHome != null && m.actualAway != null;
-              return `<button type="button" class="fx-row" data-jump-gw="${m.gw}">
-                <span class="fx-when">${fxWhen(m.kickoff)}</span>
-                <span class="fx-match"><span class="fx-home">${m.home}</span><span class="fx-vs">v</span><span class="fx-away">${m.away}</span></span>
-                ${hasResult
-                  ? `<span class="fx-score">${m.actualHome}–${m.actualAway}</span>`
-                  : fidsHtml(m.kickoff, 'LOCKS IN')}
-              </button>`;
-            }).join('')}
-          </section>`;
-        }).join('')}
-      </div>` : ''}
     </div>
 
     <div class="live-share">
@@ -324,16 +279,6 @@ function renderLiveSeason() {
   wrap.querySelectorAll('.gw-chip[data-gw]').forEach(btn => {
     btn.addEventListener('click', () => { liveGw = Number(btn.dataset.gw); renderLiveSeason(); });
   });
-  wrap.querySelectorAll('[data-jump-gw]').forEach(btn => {
-    btn.addEventListener('click', () => jumpToGw(btn.dataset.jumpGw));
-  });
-  wrap.querySelector('[data-toggle-season]')?.addEventListener('click', () => {
-    liveShowSeason = !liveShowSeason;
-    renderLiveSeason();
-  });
-  const sc = wrap.querySelector('.season-scroll');
-  const cur = wrap.querySelector('.fx-gw.is-current');
-  if (sc && cur) sc.scrollTop = Math.max(0, cur.offsetTop - 8);
   wrap.querySelectorAll('.step-row').forEach(row => bindStepper(row, me, gwMatches));
   wrap.querySelectorAll('[data-enter-result]').forEach(btn => {
     btn.addEventListener('click', () => enterResult(btn.dataset.enterResult));
@@ -354,8 +299,8 @@ function renderLiveSeason() {
 
   if (liveTimer) clearInterval(liveTimer);
   liveTimer = setInterval(() => {
-    const section = document.getElementById('s-newseason');
-    if (!section?.classList.contains('active')) return;
+    const section = document.getElementById('s-predictions');
+    if (!document.body.classList.contains('season-live') || !section?.classList.contains('active')) return;
     tickFids(wrap);
     if (wrap.querySelector('[data-just-locked="1"]') && !wrap.contains(document.activeElement)) {
       renderLiveSeason();
@@ -501,11 +446,275 @@ function fillRecap(gw, matches, players, preds) {
   }
 }
 
+function liveGwChipBar(gws, gw, extra = '') {
+  return `<div class="gw-board-wrap">
+    <div class="gw-board-label">Gameweek</div>
+    <div class="gw-board" role="list">
+      ${gws.map(g => `<button type="button" class="gw-chip ${g===gw?'on':''}" data-gw="${g}">${g}</button>`).join('')}
+    </div>
+    ${extra}
+  </div>`;
+}
+
+function bindGwChips(root) {
+  root.querySelectorAll('[data-gw]').forEach(btn => {
+    if (btn.classList.contains('step-btn') || btn.classList.contains('step-val')) return;
+    btn.addEventListener('click', () => {
+      liveGw = Number(btn.dataset.gw);
+      if (typeof renderCurrent === 'function') renderCurrent();
+    });
+  });
+}
+
+function liveGwPoints(playerId, matches, predictions) {
+  const gws = [...new Set(matches.map(m => m.gw))].sort((a, b) => a - b);
+  return gws.map(gw => {
+    let pts = 0, exact = 0, played = 0;
+    matchesForGw(gw, matches).forEach(m => {
+      if (m.actualHome == null || m.actualAway == null) return;
+      const pred = (predictions[playerId] || {})[m.id];
+      const scored = scorePredict(pred, { home: m.actualHome, away: m.actualAway });
+      if (!pred) return;
+      played++;
+      pts += scored.pts;
+      if (scored.status === 'exact') exact++;
+    });
+    return { gw, pts, exact, played };
+  });
+}
+
+function renderLiveLeaderboardPage() {
+  if (typeof setSectionCopy === 'function') {
+    setSectionCopy('leaderboard', 'Season Leaderboard', '2026/27 live table · updates as results come in');
+  }
+  const matches = liveMatches();
+  const players = currentLivePlayers();
+  const preds = LiveStore.state.predictions;
+  const board = liveLeaderboard(players, matches, preds);
+  const gw = liveGw || getActiveGameweek(Date.now(), matches);
+  const finished = matches.filter(m => m.actualHome != null).length;
+  const maxPts = Math.max(1, ...board.map(p => p.totalPts));
+  document.getElementById('lbGrid').innerHTML = board.map((p, i) => {
+    const gwPts = matchesForGw(gw, matches).reduce((n, m) => {
+      if (m.actualHome == null) return n;
+      return n + scorePredict((preds[p.id] || {})[m.id], { home: m.actualHome, away: m.actualAway }).pts;
+    }, 0);
+    return `<div class="lb-card rank-${i+1}">
+      <div class="lb-bg-num">${i+1}</div>
+      <div class="lb-medal">${['🥇','🥈','🥉'][i] || ''}</div>
+      <div class="lb-name">${(p.name || '').toUpperCase()}</div>
+      <div class="lb-handle">${p.handle || 'FRIEND'}</div>
+      <div class="lb-stats">
+        <div class="lb-stat"><div class="lb-val pts">${p.totalPts}</div><div class="lb-lbl">Points</div></div>
+        <div class="lb-divider"></div>
+        <div class="lb-stat"><div class="lb-val ex">${p.totalExact}</div><div class="lb-lbl">Exact</div></div>
+        <div class="lb-divider"></div>
+        <div class="lb-stat"><div class="lb-val gw">${gwPts}</div><div class="lb-lbl">GW${gw}</div></div>
+      </div>
+      <div class="lb-bar"><div class="lb-bar-fill" style="width:0" data-w="${Math.round(p.totalPts/maxPts*100)}"></div></div>
+    </div>`;
+  }).join('') || '<div class="muted">Add friends in Predictions, then scores will land here.</div>';
+  const strip = document.getElementById('seasonStrip');
+  if (strip) strip.innerHTML = `
+    <div class="strip-item"><span class="strip-val">380</span><span class="strip-lbl">Matches</span></div>
+    <div class="strip-item"><span class="strip-val">${finished}</span><span class="strip-lbl">Results in</span></div>
+    <div class="strip-item"><span class="strip-val">${players.length}</span><span class="strip-lbl">Players</span></div>
+    <div class="strip-item"><span class="strip-val">GW${gw}</span><span class="strip-lbl">Current</span></div>`;
+  setTimeout(() => {
+    document.querySelectorAll('#s-leaderboard .lb-bar-fill').forEach(el => el.style.width = el.dataset.w + '%');
+  }, 60);
+}
+
+function renderLiveResultsPage() {
+  const matches = liveMatches();
+  if (liveGw == null) liveGw = getActiveGameweek(Date.now(), matches);
+  const gw = liveGw;
+  const gws = [...new Set(matches.map(m => m.gw))].sort((a, b) => a - b);
+  const gwMatches = matchesForGw(gw, matches);
+  if (typeof setSectionCopy === 'function') {
+    setSectionCopy('results', 'Results', `2026/27 · Gameweek ${gw} · ${gwWindowLabel(gw, matches)}`);
+  }
+  const list = document.getElementById('matchesList');
+  list.innerHTML = `
+    ${liveGwChipBar(gws, gw)}
+    <div class="matches-list">
+      ${gwMatches.map((m, i) => {
+        const has = m.actualHome != null && m.actualAway != null;
+        const live = m.status === 'IN_PLAY' || m.status === 'PAUSED';
+        return `<div class="match-row" style="animation-delay:${i*0.03}s">
+          <div class="team-side">${crest(m.home)}<span class="team-nm">${m.home}</span></div>
+          <div class="score-center">
+            <div class="score-num">${has ? `${m.actualHome}–${m.actualAway}` : 'vs'}</div>
+            <div class="score-ft">${has ? (live ? 'LIVE' : 'FT') : fxWhen(m.kickoff)}</div>
+          </div>
+          <div class="team-side away">${crest(m.away)}<span class="team-nm">${m.away}</span></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="season-board" style="margin-top:18px">
+      <div class="chart-card-title">All ${matches.length} fixtures</div>
+      <p class="muted">Tap a row to jump to that gameweek’s predictions.</p>
+      <div class="season-scroll">
+        ${gws.map(g => {
+          const rows = matchesForGw(g, matches);
+          return `<section class="fx-gw ${g===gw?'is-current':''}">
+            <button type="button" class="fx-gw-head" data-gw="${g}">
+              <strong>Gameweek ${g}</strong>
+              <span>${gwWindowLabel(g, matches)}</span>
+              <em>${rows.filter(m => m.actualHome != null).length}/${rows.length} results</em>
+            </button>
+            ${rows.map(m => {
+              const hasResult = m.actualHome != null && m.actualAway != null;
+              return `<button type="button" class="fx-row" data-jump-gw="${m.gw}">
+                <span class="fx-when">${fxWhen(m.kickoff)}</span>
+                <span class="fx-match"><span class="fx-home">${m.home}</span><span class="fx-vs">v</span><span class="fx-away">${m.away}</span></span>
+                ${hasResult ? `<span class="fx-score">${m.actualHome}–${m.actualAway}</span>` : '<span class="muted">TBD</span>'}
+              </button>`;
+            }).join('')}
+          </section>`;
+        }).join('')}
+      </div>
+    </div>`;
+  bindGwChips(list);
+  list.querySelectorAll('[data-jump-gw]').forEach(btn => {
+    btn.addEventListener('click', () => jumpToGw(btn.dataset.jumpGw));
+  });
+  const sc = list.querySelector('.season-scroll');
+  const cur = list.querySelector('.fx-gw.is-current');
+  if (sc && cur) sc.scrollTop = Math.max(0, cur.offsetTop - 8);
+}
+
+function renderLiveHistoryPage() {
+  if (typeof setSectionCopy === 'function') {
+    setSectionCopy('history', 'Season History', '2026/27 points as each gameweek finishes');
+  }
+  const matches = liveMatches();
+  const players = currentLivePlayers();
+  const preds = LiveStore.state.predictions;
+  const active = getActiveGameweek(Date.now(), matches);
+  const gws = [...new Set(matches.map(m => m.gw))].filter(g => g <= Math.max(active, 1)).sort((a, b) => a - b);
+  const series = {};
+  players.forEach(p => {
+    let sum = 0;
+    series[p.id] = liveGwPoints(p.id, matches, preds).filter(r => gws.includes(r.gw)).map(r => {
+      sum += r.pts;
+      return { ...r, total: sum };
+    });
+  });
+  const W=900, H=180, pL=32, pR=16, pT=12, pB=24;
+  const cW=W-pL-pR, cH=H-pT-pB;
+  const max = Math.max(20, ...players.flatMap(p => series[p.id].map(r => r.total)));
+  const tx = i => pL+(gws.length < 2 ? cW/2 : (i/(gws.length-1))*cW);
+  const ty = v => pT+cH-Math.min(v/max,1)*cH;
+  let paths='', dots='';
+  players.forEach(p => {
+    const c = (typeof playerColor === 'function' ? playerColor(p.id) : (COLORS[p.id] || '#00ff87'));
+    const d = series[p.id].map((row,i) => `${i?'L':'M'}${tx(i).toFixed(1)},${ty(row.total).toFixed(1)}`).join(' ');
+    paths += `<path fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="${d}"/>`;
+    series[p.id].forEach((row,i) => { dots += `<circle cx="${tx(i).toFixed(1)}" cy="${ty(row.total).toFixed(1)}" r="3.5" fill="${c}"/>`; });
+  });
+  const ticks = [0, Math.round(max/2), max];
+  const gridLines = ticks.map(v =>
+    `<line x1="${pL}" y1="${ty(v).toFixed(1)}" x2="${pL+cW}" y2="${ty(v).toFixed(1)}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
+     <text x="${pL-4}" y="${(ty(v)+4).toFixed(1)}" text-anchor="end" fill="#d4c6e0" font-size="11" font-family="Barlow,sans-serif">${v}</text>`
+  ).join('');
+  const labelEvery = gws.length > 12 ? 5 : 1;
+  const xLabels = gws.map((gw,i) => (i % labelEvery === 0 || i === gws.length-1)
+    ? `<text x="${tx(i).toFixed(1)}" y="${H-4}" text-anchor="middle" fill="#d4c6e0" font-size="11" font-family="Barlow,sans-serif">GW${gw}</text>`
+    : '').join('');
+
+  document.getElementById('historyChart').innerHTML = `
+    <div class="chart-label">Points progression — 2026/27</div>
+    <div class="chart-legend">
+      ${players.map(p=>`<span style="display:flex;align-items:center;gap:5px;font-family:Barlow,sans-serif;font-size:14px;font-weight:600;color:${typeof playerColor==='function'?playerColor(p.id):(COLORS[p.id]||'#00ff87')}">
+        <span style="width:18px;height:2.5px;background:${typeof playerColor==='function'?playerColor(p.id):(COLORS[p.id]||'#00ff87')};display:inline-block;border-radius:2px"></span>${p.name}</span>`).join('')}
+    </div>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;overflow:visible">
+      ${gridLines}
+      <line x1="${pL}" y1="${pT}" x2="${pL}" y2="${pT+cH}" stroke="rgba(255,255,255,0.1)"/>
+      ${paths}${dots}${xLabels}
+    </svg>`;
+
+  const board = liveLeaderboard(players, matches, preds);
+  const byId = Object.fromEntries(board.map(p => [p.id, p]));
+  const recentGws = gws.slice(-5);
+  const recent = recentGws.map(gw => {
+    const cells = players.map(p => {
+      const row = series[p.id].find(r => r.gw === gw);
+      const col = typeof playerColor === 'function' ? playerColor(p.id) : (COLORS[p.id] || '#00ff87');
+      return `<td style="color:${col}">${row ? row.pts : 0}</td>`;
+    }).join('');
+    return `<tr><td>GW ${gw}</td>${cells}</tr>`;
+  }).join('');
+  document.getElementById('historyTable').innerHTML = `
+    <div class="tscroll">
+      <table class="ptable">
+        <thead><tr><th>Gameweek</th>${players.map(p => `<th>${p.name}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${recent || '<tr><td colspan="8">No finished gameweeks yet.</td></tr>'}
+          <tr style="border-top:1px solid rgba(255,255,255,0.1)">
+            <td style="font-weight:800;color:var(--w)">SEASON TOTAL</td>
+            ${players.map(p => `<td style="font-weight:800">${(byId[p.id] && byId[p.id].totalPts) || 0}</td>`).join('')}
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function renderLiveChartsPage() {
+  if (typeof setSectionCopy === 'function') {
+    setSectionCopy('charts', 'Stats & Charts', '2026/27 live breakdown');
+  }
+  const matches = liveMatches();
+  const players = currentLivePlayers();
+  const preds = LiveStore.state.predictions;
+  const board = liveLeaderboard(players, matches, preds);
+  const maxPts = Math.max(1, ...board.map(p => p.totalPts));
+  const maxEx = Math.max(1, ...board.map(p => p.totalExact));
+  const color = (id) => typeof playerColor === 'function' ? playerColor(id) : (COLORS[id] || '#00ff87');
+  function bars(key, max) {
+    return board.map(p => `
+      <div class="bar-row">
+        <span class="bar-lbl" style="color:${color(p.id)}">${p.name}</span>
+        <div class="bar-track"><div class="bar-fill" style="background:${color(p.id)}" data-w="${Math.round((p[key]||0)/max*100)}"></div></div>
+        <span class="bar-num" style="color:${color(p.id)}">${p[key]||0}</span>
+      </div>`).join('');
+  }
+  const extras = board.map(p => {
+    const miss = p.bestMiss
+      ? `${p.bestMiss.pred.home}–${p.bestMiss.pred.away} vs ${p.bestMiss.match.actualHome}–${p.bestMiss.match.actualAway} (${p.bestMiss.match.home})`
+      : 'waiting on results';
+    return `<div class="extra-stat">
+      <div class="extra-name" style="color:${color(p.id)}">${p.name}</div>
+      <div class="extra-grid">
+        <div><b>${p.bestRun || 0}</b><span>scoring run</span></div>
+        <div><b>${p.totalExact}</b><span>exact</span></div>
+        <div><b>${p.bestMiss ? p.bestMiss.goalDiff : '—'}</b><span>nearest miss</span></div>
+      </div>
+      <div class="extra-miss">${miss}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('chartsGrid').innerHTML = `
+    <div class="chart-card">
+      <div class="chart-card-title">Season points</div>
+      <div class="bar-chart">${bars('totalPts', maxPts)}</div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Exact scores</div>
+      <div class="bar-chart">${bars('totalExact', maxEx)}</div>
+    </div>
+    <div class="chart-card extra-card">
+      <div class="chart-card-title">Streaks &amp; nearest miss</div>
+      ${extras || '<p class="muted">Charts fill in once results are scored.</p>'}
+    </div>`;
+  setTimeout(() => document.querySelectorAll('#s-charts .bar-fill').forEach(el => el.style.width = el.dataset.w + '%'), 60);
+}
+
 async function syncLiveApi(manual) {
   const gw = liveGw || getActiveGameweek();
   const res = await FootballAPI.syncGameweek(gw);
   if (manual) toast(res.ok ? (res.count ? `Updated ${res.count} score${res.count===1?'':'s'}` : 'API ok — no new scores yet') : (res.error || 'Sync failed'));
-  if (document.getElementById('s-newseason')?.classList.contains('active')) renderLiveSeason();
+  if (typeof renderCurrent === 'function') renderCurrent();
 }
 
 function bootLiveSeason() {

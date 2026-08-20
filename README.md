@@ -32,13 +32,13 @@ Each player predicts the scoreline for every Premier League match before kickoff
 
 ## Features
 
-- **Leaderboard** — 2025/26 standings with points, exact score count, and GW38 breakdown
-- **Results** — GW38 scorelines with team badges
-- **Predictions** — per-player GW38 table, result vs predicted score
-- **History** — SVG points progression across the season
+- **Two seasons** — top bar is only **2025–26** and **2026–27**. Leaderboard, Results, Predictions, History, Scoring, and Charts sit under each year.
+- **Leaderboard** — 2025/26 final standings, plus a live 2026/27 table
+- **Results** — GW38 archive, and the full 2026/27 fixture list
+- **Predictions** — GW38 vs actual, and in-app 2026/27 score entry with kickoff locks
+- **History** — SVG points progression for both seasons
 - **Scoring** — visual explanation of the points system
-- **Charts** — bar charts, GW38 donut, **streaks and nearest-miss**
-- **2026/27 Live** — predict all 38 gameweeks, kickoff locks, share codes, recaps, optional live scores
+- **Charts** — bar charts, streaks, and nearest-miss
 
 ---
 
@@ -46,12 +46,14 @@ Each player predicts the scoreline for every Premier League match before kickoff
 
 The season opens **Friday 21 August 2026, 20:00 UK** (Arsenal vs Coventry). Friends do not need a spreadsheet.
 
-1. Open the **2026/27** tab
-2. Tap your name (or **Add friend**)
-3. Browse all **38 gameweeks / 380 matches** (GW chips + full fixture list)
-4. Enter scorelines — they **lock automatically at kickoff** (live airport-style countdown)
+1. Open the app — the top bar is **2025–26** (archive) or **2026–27** (live)
+2. On **2026–27**, tap **Predictions**, then your name (or **Add friend**)
+3. Use the gameweek chips to browse all **38 weeks / 380 matches**
+4. Enter scorelines — they **lock automatically at kickoff**
 5. Tap **Copy league code** and paste it in the group chat
 6. Everyone else taps **Import code** so the board is shared
+
+**2025–26** keeps the finished-season Leaderboard, Results, Predictions, History, Scoring, and Charts. **2026–27** has the same pages for the live campaign.
 
 Optional: set a PIN in Settings so nobody edits your picks. Live scores sync automatically from ESPN (no token). Paste Firebase config if you want realtime sync instead of share codes.
 

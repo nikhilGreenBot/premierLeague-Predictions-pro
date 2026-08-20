@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
 </head>
-<body>
+<body class="season-live">
 <div class="app">
 
   <!-- HEADER -->
@@ -29,19 +29,24 @@
         </div>
       </div>
       <div class="header-season">
-        <span class="header-season-num">2025/26</span>
-        <span class="header-champion">🔴 Arsenal Champions</span>
+        <span class="header-season-num">2026/27</span>
+        <span class="header-champion">⚡ Live season</span>
       </div>
     </div>
-    <nav class="nav">
+    <nav class="season-bar" aria-label="Season">
+      <div class="season-bar-inner">
+        <button type="button" class="season-tab" data-season="2025-26">2025–26</button>
+        <button type="button" class="season-tab active" data-season="2026-27">2026–27</button>
+      </div>
+    </nav>
+    <nav class="nav" aria-label="Pages">
       <div class="nav-inner">
-        <button class="nav-tab active" data-tab="leaderboard"><span class="ni">🏅</span><span class="nl">Leaderboard</span></button>
+        <button class="nav-tab" data-tab="leaderboard"><span class="ni">🏅</span><span class="nl">Leaderboard</span></button>
         <button class="nav-tab" data-tab="results"><span class="ni">⚽</span><span class="nl">Results</span></button>
-        <button class="nav-tab" data-tab="predictions"><span class="ni">🎯</span><span class="nl">Predictions</span></button>
+        <button class="nav-tab active" data-tab="predictions"><span class="ni">🎯</span><span class="nl">Predictions</span></button>
         <button class="nav-tab" data-tab="history"><span class="ni">📊</span><span class="nl">History</span></button>
         <button class="nav-tab" data-tab="scoring"><span class="ni">📋</span><span class="nl">Scoring</span></button>
         <button class="nav-tab" data-tab="charts"><span class="ni">📈</span><span class="nl">Charts</span></button>
-        <button class="nav-tab live-tab" data-tab="newseason"><span class="ni">⚡</span><span class="nl">2026/27</span></button>
         <div class="nav-indicator" id="navIndicator"></div>
       </div>
     </nav>
@@ -50,18 +55,13 @@
   <!-- MAIN -->
   <main class="main">
 
-    <section class="section active" id="s-leaderboard">
+    <section class="section" id="s-leaderboard">
       <div class="section-header">
         <h2 class="section-title">Season Leaderboard</h2>
         <span class="section-sub">Final standings · 38 gameweeks</span>
       </div>
       <div class="lb-grid" id="lbGrid"></div>
-      <div class="season-strip">
-        <div class="strip-item"><span class="strip-val">380</span><span class="strip-lbl">Matches</span></div>
-        <div class="strip-item"><span class="strip-val">931</span><span class="strip-lbl">Goals</span></div>
-        <div class="strip-item"><span class="strip-val">Haaland</span><span class="strip-lbl">Top Scorer</span></div>
-        <div class="strip-item"><span class="strip-val">Arsenal</span><span class="strip-lbl">Champions</span></div>
-      </div>
+      <div class="season-strip" id="seasonStrip"></div>
     </section>
 
     <section class="section" id="s-results">
@@ -72,12 +72,13 @@
       <div id="matchesList"></div>
     </section>
 
-    <section class="section" id="s-predictions">
+    <section class="section active" id="s-predictions">
       <div class="section-header">
         <h2 class="section-title">Predictions</h2>
-        <span class="section-sub">GW38 — all predictions vs actual</span>
+        <span class="section-sub">Enter scores before kickoff</span>
       </div>
       <div id="predWrap"></div>
+      <div id="liveApp"></div>
     </section>
 
     <section class="section" id="s-history">
@@ -103,14 +104,6 @@
         <span class="section-sub">Season performance breakdown</span>
       </div>
       <div class="charts-grid" id="chartsGrid"></div>
-    </section>
-
-    <section class="section" id="s-newseason">
-      <div class="section-header">
-        <h2 class="section-title">2026/27 Live</h2>
-        <span class="section-sub">All 38 gameweeks · 380 matches · locks at kickoff</span>
-      </div>
-      <div id="liveApp"></div>
     </section>
 
   </main>

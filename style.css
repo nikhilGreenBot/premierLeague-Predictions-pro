@@ -49,6 +49,24 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 .header-season-num{font-family:var(--fd);font-size:20px;letter-spacing:2px}
 .header-champion{font-family:var(--fc);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--red)}
 
+/* SEASON TABS */
+.season-bar{border-bottom:1px solid var(--border)}
+.season-bar-inner{display:grid;grid-template-columns:1fr 1fr;max-width:1100px;margin:0 auto}
+.season-tab{
+  background:none;border:none;cursor:pointer;padding:12px 16px;
+  font-family:var(--fd);font-size:28px;letter-spacing:2px;color:var(--dim);
+  border-bottom:3px solid transparent;transition:color .2s,border-color .2s
+}
+.season-tab:hover{color:var(--w)}
+.season-tab.active{color:var(--g);border-bottom-color:var(--g)}
+.season-tab[data-season="2026-27"].active{color:var(--gold);border-bottom-color:var(--gold)}
+body.season-live .nav-tab.active{color:var(--gold)}
+body.season-live .nav-indicator{background:var(--gold)}
+body.season-archive #liveApp{display:none}
+body.season-archive #predWrap{display:block}
+body.season-live #predWrap{display:none}
+body.season-live #liveApp{display:block}
+
 /* NAV */
 .nav{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .nav::-webkit-scrollbar{display:none}
@@ -211,6 +229,7 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 /* RESPONSIVE */
 @media(max-width:700px){
   .header-pl{font-size:16px}.header-trophy{font-size:22px}
+  .season-tab{font-size:22px;padding:10px 8px}
   .nav-tab{padding:11px 10px;font-size:13px}.nav-icon,.ni{display:none}
   .lb-grid{grid-template-columns:1fr}
   .lb-name{font-size:28px}.lb-val{font-size:30px}
@@ -228,9 +247,6 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 }
 
 /* LIVE TAB */
-.live-tab { border-left: 1px solid var(--border); }
-.live-tab.active { color: var(--gold) !important; }
-.live-tab.active ~ .nav-indicator { background: var(--gold) !important; }
 
 /* WIP CARD */
 .wip-card {
@@ -436,7 +452,7 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;
 .stat-chip strong{font-family:var(--fd);font-size:32px;color:var(--g);line-height:1.1}
 .stat-chip em{display:block;font-style:normal;font-size:14px;color:var(--dim);margin-top:4px}
 .live-predict-head{display:flex;justify-content:space-between;align-items:flex-end;margin:4px 0 10px}
-#s-newseason .chart-card-title{font-family:var(--fb);font-size:18px;font-weight:700;letter-spacing:0;
+#s-predictions .chart-card-title, #s-results .chart-card-title, #s-charts .chart-card-title{font-family:var(--fb);font-size:18px;font-weight:700;letter-spacing:0;
   text-transform:none;color:var(--w);margin-bottom:2px}
 .live-fixtures{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
 .lock-tag{font-family:var(--fb);font-size:13px;font-weight:700;color:var(--g);margin-top:4px}
