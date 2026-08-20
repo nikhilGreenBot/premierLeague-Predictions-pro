@@ -12,10 +12,10 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%2337003c'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%2300ff87' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23f5c518'/%3E%3C/svg%3E"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
 </head>
-<body>
+<body class="season-live">
 <div class="app">
 
   <!-- HEADER -->
@@ -29,19 +29,24 @@
         </div>
       </div>
       <div class="header-season">
-        <span class="header-season-num">2025/26</span>
-        <span class="header-champion">🔴 Arsenal Champions</span>
+        <span class="header-season-num">2026/27</span>
+        <span class="header-champion">⚡ Live season</span>
       </div>
     </div>
-    <nav class="nav">
+    <nav class="season-bar" aria-label="Season">
+      <div class="season-bar-inner">
+        <button type="button" class="season-tab" data-season="2025-26">2025–26</button>
+        <button type="button" class="season-tab active" data-season="2026-27">2026–27</button>
+      </div>
+    </nav>
+    <nav class="nav" aria-label="Pages">
       <div class="nav-inner">
-        <button class="nav-tab active" data-tab="leaderboard"><span class="ni">🏅</span><span class="nl">Leaderboard</span></button>
+        <button class="nav-tab" data-tab="leaderboard"><span class="ni">🏅</span><span class="nl">Leaderboard</span></button>
         <button class="nav-tab" data-tab="results"><span class="ni">⚽</span><span class="nl">Results</span></button>
-        <button class="nav-tab" data-tab="predictions"><span class="ni">🎯</span><span class="nl">Predictions</span></button>
+        <button class="nav-tab active" data-tab="predictions"><span class="ni">🎯</span><span class="nl">Predictions</span></button>
         <button class="nav-tab" data-tab="history"><span class="ni">📊</span><span class="nl">History</span></button>
         <button class="nav-tab" data-tab="scoring"><span class="ni">📋</span><span class="nl">Scoring</span></button>
         <button class="nav-tab" data-tab="charts"><span class="ni">📈</span><span class="nl">Charts</span></button>
-        <button class="nav-tab live-tab" data-tab="newseason"><span class="ni">⚡</span><span class="nl">2026/27</span></button>
         <div class="nav-indicator" id="navIndicator"></div>
       </div>
     </nav>
@@ -50,18 +55,13 @@
   <!-- MAIN -->
   <main class="main">
 
-    <section class="section active" id="s-leaderboard">
+    <section class="section" id="s-leaderboard">
       <div class="section-header">
         <h2 class="section-title">Season Leaderboard</h2>
         <span class="section-sub">Final standings · 38 gameweeks</span>
       </div>
       <div class="lb-grid" id="lbGrid"></div>
-      <div class="season-strip">
-        <div class="strip-item"><span class="strip-val">380</span><span class="strip-lbl">Matches</span></div>
-        <div class="strip-item"><span class="strip-val">931</span><span class="strip-lbl">Goals</span></div>
-        <div class="strip-item"><span class="strip-val">Haaland</span><span class="strip-lbl">Top Scorer</span></div>
-        <div class="strip-item"><span class="strip-val">Arsenal</span><span class="strip-lbl">Champions</span></div>
-      </div>
+      <div class="season-strip" id="seasonStrip"></div>
     </section>
 
     <section class="section" id="s-results">
@@ -72,12 +72,13 @@
       <div id="matchesList"></div>
     </section>
 
-    <section class="section" id="s-predictions">
+    <section class="section active" id="s-predictions">
       <div class="section-header">
         <h2 class="section-title">Predictions</h2>
-        <span class="section-sub">GW38 — all predictions vs actual</span>
+        <span class="section-sub">Enter scores before kickoff</span>
       </div>
       <div id="predWrap"></div>
+      <div id="liveApp"></div>
     </section>
 
     <section class="section" id="s-history">
@@ -105,20 +106,12 @@
       <div class="charts-grid" id="chartsGrid"></div>
     </section>
 
-    <section class="section" id="s-newseason">
-      <div class="section-header">
-        <h2 class="section-title">2026/27 Live</h2>
-        <span class="section-sub">Predict · locks at kickoff · share with the group</span>
-      </div>
-      <div id="liveApp"></div>
-    </section>
-
   </main>
 
   <footer class="footer">
     <span class="footer-logo">PL PREDICTIONS PRO</span>
     <span class="footer-sep">·</span>
-    <span class="footer-sub">2025/26 · football-data.org</span>
+    <span class="footer-sub">2025/26 archive · 2026/27 live scores</span>
     <a href="https://github.com/nikhilGreenBot/premierLeague-Predictions-pro-by-Parth" class="footer-gh" target="_blank" rel="noopener">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
       GitHub

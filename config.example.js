@@ -1,5 +1,6 @@
-// Optional local config. Copy to config.js (gitignored) if you want tokens baked in
-// for a private fork. The live Settings panel is the supported path for friends.
+// Optional local config. Copy to config.js (gitignored) if you want values baked in
+// for a private fork. Live scores on GitHub Pages use ESPN and need no token.
+// footballDataToken only works from localhost. The Settings panel is the path for friends.
 
 window.PLPP_CONFIG = {
   leagueId: 'PARTH',
