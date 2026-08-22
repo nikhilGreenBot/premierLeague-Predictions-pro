@@ -162,6 +162,10 @@ const RENDERERS = {
       <div class="strip-item"><span class="strip-val">931</span><span class="strip-lbl">Goals</span></div>
       <div class="strip-item"><span class="strip-val">Haaland</span><span class="strip-lbl">Top Scorer</span></div>
       <div class="strip-item"><span class="strip-val">Arsenal</span><span class="strip-lbl">Champions</span></div>`;
+    const gb = document.getElementById('globalBoard');
+    if (gb) gb.innerHTML = '';
+    const mm = document.getElementById('matchdayMail');
+    if (mm) mm.innerHTML = '';
     setTimeout(() => {
       document.querySelectorAll('#s-leaderboard .lb-bar-fill').forEach(el => el.style.width = el.dataset.w + '%');
     }, 60);

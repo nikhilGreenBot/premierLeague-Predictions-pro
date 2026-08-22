@@ -201,3 +201,102 @@ function formatKickoff(iso, now = Date.now()) {
 function slugifyName(name) {
   return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'player';
 }
+
+/** UK calendar date YYYY-MM-DD for a kickoff ISO string. */
+function ukDateKey(iso) {
+  return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
+}
+
+function ukDateLabel(dateKey) {
+  const [y, m, d] = String(dateKey).split('-').map(Number);
+  if (!y || !m || !d) return String(dateKey);
+  const noon = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  return noon.toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+  });
+}
+
+function isMatchFinished(m) {
+  if (m == null || m.actualHome == null || m.actualAway == null) return false;
+  const st = m.status || 'FINISHED';
+  return st !== 'IN_PLAY' && st !== 'PAUSED' && st !== 'SCHEDULED';
+}
+
+function matchesForMatchday(dateKey, matches) {
+  return (matches || []).filter(m => ukDateKey(m.kickoff) === dateKey)
+    .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
+}
+
+function listMatchdayKeys(matches) {
+  const keys = [...new Set((matches || []).map(m => ukDateKey(m.kickoff)))];
+  return keys.sort();
+}
+
+/** Matchdays where every fixture has a full-time result (not still live). */
+function completedMatchdayKeys(matches) {
+  return listMatchdayKeys(matches).filter(key => {
+    const rows = matchesForMatchday(key, matches);
+    return rows.length > 0 && rows.every(isMatchFinished);
+  });
+}
+
+function matchdayPlayerPoints(playerId, dayMatches, predictions) {
+  let pts = 0, exact = 0, correct = 0, played = 0;
+  dayMatches.forEach(m => {
+    if (!isMatchFinished(m)) return;
+    const pred = (predictions[playerId] || {})[m.id];
+    if (!pred) return;
+    const scored = scorePredict(pred, { home: m.actualHome, away: m.actualAway });
+    played++;
+    pts += scored.pts;
+    if (scored.status === 'exact') exact++;
+    if (scored.status === 'correct') correct++;
+  });
+  return { pts, exact, correct, played };
+}
+
+function buildMatchdayRecap(dateKey, matches, players, predictions) {
+  const dayMatches = matchesForMatchday(dateKey, matches);
+  const gws = [...new Set(dayMatches.map(m => m.gw))].sort((a, b) => a - b);
+  const board = (players || []).map(p => {
+    const s = matchdayPlayerPoints(p.id, dayMatches, predictions || {});
+    return { ...p, ...s };
+  }).sort((a, b) => b.pts - a.pts || b.exact - a.exact || a.name.localeCompare(b.name));
+
+  const lines = [
+    `🏆 PL Predictions Pro — Matchday recap`,
+    ukDateLabel(dateKey),
+    gws.length ? `Gameweek${gws.length > 1 ? 's' : ''} ${gws.join(', ')} · ${dayMatches.length} matches` : `${dayMatches.length} matches`,
+    '',
+    'STANDINGS',
+  ];
+  board.forEach((p, i) => {
+    const medal = ['🥇', '🥈', '🥉'][i] || `${i + 1}.`;
+    lines.push(`${medal} ${p.name}  ${p.pts} pts  (${p.exact} exact · ${p.correct} result)`);
+  });
+  lines.push('', 'RESULTS & EVERYONE’S PICKS');
+  dayMatches.forEach(m => {
+    lines.push('');
+    lines.push(`${m.home} ${m.actualHome}–${m.actualAway} ${m.away}`);
+    (players || []).forEach(p => {
+      const pred = (predictions[p.id] || {})[m.id];
+      if (!pred) {
+        lines.push(`  ${p.name}: —`);
+        return;
+      }
+      const scored = scorePredict(pred, { home: m.actualHome, away: m.actualAway });
+      const tag = scored.status === 'exact' ? '⭐3' : scored.status === 'correct' ? '✓1' : '✗0';
+      lines.push(`  ${p.name}: ${pred.home}–${pred.away}  ${tag}`);
+    });
+  });
+  lines.push('', 'Scoring: exact 3 · correct result 1 · miss 0');
+  return {
+    dateKey,
+    label: ukDateLabel(dateKey),
+    dayMatches,
+    board,
+    text: lines.join('\n'),
+    subject: `PL Predictions Pro — ${ukDateLabel(dateKey)} points`,
+  };
+}
+
