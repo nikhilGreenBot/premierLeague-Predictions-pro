@@ -33,12 +33,13 @@ Each player predicts the scoreline for every Premier League match before kickoff
 ## Features
 
 - **Two seasons** — top bar is only **2025–26** and **2026–27**. Leaderboard, Results, Predictions, History, Scoring, and Charts sit under each year.
-- **Leaderboard** — 2025/26 final standings, plus a live 2026/27 table
+- **Leaderboard** — 2025/26 final standings, plus a live 2026/27 table **with everyone’s picks on one board**
 - **Results** — GW38 archive, and the full 2026/27 fixture list
-- **Predictions** — GW38 vs actual, and in-app 2026/27 score entry with kickoff locks
+- **Predictions** — GW38 vs actual, and in-app 2026/27 score entry with kickoff locks · toggle **League board** to see every friend’s scorelines
 - **History** — SVG points progression for both seasons
 - **Scoring** — visual explanation of the points system
 - **Charts** — bar charts, streaks, and nearest-miss
+- **Matchday email** — when every game on a UK day is finished, build a points email with everyone’s picks (auto-send with optional Web3Forms key)
 
 ---
 
@@ -65,7 +66,8 @@ Optional: set a PIN in Settings so nobody edits your picks. Live scores sync aut
 - [x] Firebase Firestore for real-time predictions and live scoring — optional. Paste your Firebase web config in Settings (see below). Share codes work without it.
 - [x] In-app prediction form so players never touch the sheet — optional Google Form embed in Settings if you still want one.
 - [x] Automatic prediction lock at kickoff — client-side lock on every device. Optional PIN. Testing override lives in Settings.
-- [x] Weekly GW recap — copy or email (`mailto`) a generated recap. Cloud email sending needs a later mail provider.
+- [x] Weekly GW / matchday recap — copy, mailto, or auto-send via optional [Web3Forms](https://web3forms.com) key in Settings when a UK matchday is fully FT (app must be open). Cloud cron email needs a later mail provider.
+- [x] Global league board — Leaderboard + Predictions “League board” show everyone’s predictions side by side
 - [x] Streak tracking and nearest-miss stat — Charts tab (2025/26 GW38) and the 2026/27 live board.
 
 ---
@@ -97,6 +99,7 @@ node tests/scoring.test.js
 node tests/fixtures.test.js
 node tests/firebase-config.test.js
 node tests/api.test.js
+node tests/matchday.test.js
 ```
 
 Optional private config: copy `config.example.js` to `config.js` and add `<script src="config.js"></script>` before `bg.js` in `index.html`. `config.js` is gitignored so tokens stay off GitHub.

@@ -4,6 +4,8 @@ let liveGw = null;
 let liveTimer = null;
 let liveApiTimer = null;
 let liveShowSeason = true;
+let predBoardMode = 'mine'; // 'mine' | 'league'
+let matchdayMailBusy = false;
 
 function currentLivePlayers() {
   return LiveStore.state.players;
@@ -100,6 +102,232 @@ function stepper(value, disabled, attr) {
   </div>`;
 }
 
+function formatPredCell(pred, match) {
+  if (!pred) return '<span class="gb-empty">—</span>';
+  const score = `${pred.home}–${pred.away}`;
+  if (match.actualHome == null || match.actualAway == null) {
+    return `<span class="gb-pick">${score}</span>`;
+  }
+  const scored = scorePredict(pred, { home: match.actualHome, away: match.actualAway });
+  const cls = scored.status === 'exact' ? 'exact' : scored.status === 'correct' ? 'correct' : 'wrong';
+  const tag = scored.status === 'exact' ? '⭐3' : scored.status === 'correct' ? '✓1' : '✗0';
+  return `<span class="gb-pick ${cls}">${score}<em>${tag}</em></span>`;
+}
+
+function everyonePicksTable(matches, players, preds, opts = {}) {
+  const rows = matches || [];
+  const people = players || [];
+  if (!rows.length) return '<p class="muted">No fixtures in this window.</p>';
+  const anyPicks = people.some(p => rows.some(m => (preds[p.id] || {})[m.id]));
+  const note = opts.note || (!anyPicks
+    ? '<p class="muted">No shared picks on this device yet — import a league code (or connect Firebase) so everyone’s scores appear here.</p>'
+    : '');
+  return `${note}
+    <div class="gb-scroll">
+      <table class="gb-table">
+        <thead>
+          <tr>
+            <th>Match</th>
+            <th>Result</th>
+            ${people.map(p => `<th style="color:${typeof playerColor==='function'?playerColor(p.id):(COLORS[p.id]||'#00ff87')}">${p.name}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(m => {
+            const has = m.actualHome != null && m.actualAway != null;
+            const live = m.status === 'IN_PLAY' || m.status === 'PAUSED';
+            return `<tr>
+              <td class="gb-match"><span class="gb-home">${m.home}</span><span class="gb-vs">v</span><span class="gb-away">${m.away}</span>
+                <div class="gb-when">${fxWhen(m.kickoff)}</div></td>
+              <td class="gb-result">${has ? `<strong>${m.actualHome}–${m.actualAway}</strong><div class="gb-when">${live ? 'LIVE' : 'FT'}</div>` : '<span class="muted">TBD</span>'}</td>
+              ${people.map(p => `<td>${formatPredCell((preds[p.id] || {})[m.id], m)}</td>`).join('')}
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function buildGwRecapText(gw, matches, players, preds) {
+  const gwMatches = matchesForGw(gw, matches);
+  const board = liveLeaderboard(players, gwMatches, preds);
+  const lines = [
+    `🏆 PL Predictions Pro — GW${gw} recap`,
+    `2026/27 · ${gwMatches.filter(m => m.actualHome != null).length}/${gwMatches.length} results in`,
+    '',
+  ];
+  board.forEach((p, i) => {
+    lines.push(`${['🥇','🥈','🥉'][i] || (i+1)+'.'} ${p.name}  ${p.totalPts} pts  (${p.totalExact} exact${p.bestMiss ? `, nearest miss ${p.bestMiss.goalDiff}` : ''})`);
+  });
+  lines.push('', 'EVERYONE’S PICKS');
+  gwMatches.forEach(m => {
+    const has = m.actualHome != null && m.actualAway != null;
+    lines.push('');
+    lines.push(has ? `${m.home} ${m.actualHome}–${m.actualAway} ${m.away}` : `${m.home} vs ${m.away}`);
+    players.forEach(p => {
+      const pred = (preds[p.id] || {})[m.id];
+      if (!pred) { lines.push(`  ${p.name}: —`); return; }
+      if (!has) { lines.push(`  ${p.name}: ${pred.home}–${pred.away}`); return; }
+      const scored = scorePredict(pred, { home: m.actualHome, away: m.actualAway });
+      const tag = scored.status === 'exact' ? '⭐3' : scored.status === 'correct' ? '✓1' : '✗0';
+      lines.push(`  ${p.name}: ${pred.home}–${pred.away}  ${tag}`);
+    });
+  });
+  lines.push('', 'Scoring: exact 3 · correct result 1 · miss 0');
+  return lines.join('\n');
+}
+
+function mailtoHref(to, subject, body) {
+  const list = String(to || '').split(/[,;]+/).map(s => s.trim()).filter(Boolean).join(',');
+  return `mailto:${list}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+async function sendMatchdayEmail(recap, { forceMailto = false } = {}) {
+  const to = (LiveStore.state.settings.recapEmails || '').trim();
+  const key = (LiveStore.state.settings.web3formsKey || '').trim();
+  if (!to && !key) {
+    throw new Error('Add recap emails (or a Web3Forms key) in Settings first.');
+  }
+  if (!forceMailto && key) {
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        access_key: key,
+        subject: recap.subject,
+        email: to.split(/[,;]+/).map(s => s.trim()).filter(Boolean)[0] || 'league@localhost',
+        name: 'PL Predictions Pro',
+        message: recap.text + (to ? `\n\nAlso send to: ${to}` : ''),
+        from_name: 'PL Predictions Pro',
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.success === false) {
+      throw new Error(data.message || 'Email provider rejected the send.');
+    }
+    LiveStore.markMatchdayMailSent(recap.dateKey, { via: 'web3forms' });
+    return { via: 'web3forms' };
+  }
+  const href = mailtoHref(to, recap.subject, recap.text);
+  window.location.href = href;
+  LiveStore.markMatchdayMailSent(recap.dateKey, { via: 'mailto' });
+  return { via: 'mailto', href };
+}
+
+async function maybeAutoMatchdayEmail() {
+  if (matchdayMailBusy) return;
+  if (LiveStore.state.settings.autoMatchdayEmail === false) return;
+  const matches = liveMatches();
+  const done = completedMatchdayKeys(matches);
+  const pending = done.filter(k => !LiveStore.wasMatchdayMailSent(k));
+  if (!pending.length) return;
+  const dateKey = pending[0];
+  const recap = buildMatchdayRecap(dateKey, matches, currentLivePlayers(), LiveStore.state.predictions);
+  const to = (LiveStore.state.settings.recapEmails || '').trim();
+  const key = (LiveStore.state.settings.web3formsKey || '').trim();
+  if (!to && !key) return;
+  matchdayMailBusy = true;
+  try {
+    if (key) {
+      await sendMatchdayEmail(recap);
+      toast(`Matchday email sent · ${recap.label}`);
+    } else {
+      // Mailto needs a user gesture in most browsers — flag UI instead of auto-opening.
+      toast(`Matchday ready · ${recap.label}`);
+    }
+  } catch (e) {
+    console.warn('Matchday email failed', e);
+  } finally {
+    matchdayMailBusy = false;
+    if (typeof renderCurrent === 'function' && pageId === 'leaderboard') renderCurrent();
+  }
+}
+
+function renderMatchdayMailPanel(root, matches, players, preds) {
+  if (!root) return;
+  const done = completedMatchdayKeys(matches);
+  const pending = done.filter(k => !LiveStore.wasMatchdayMailSent(k));
+  const latest = pending[0] || done[done.length - 1] || null;
+  const autoOn = LiveStore.state.settings.autoMatchdayEmail !== false;
+  const hasKey = !!(LiveStore.state.settings.web3formsKey || '').trim();
+  const hasTo = !!(LiveStore.state.settings.recapEmails || '').trim();
+
+  if (!latest) {
+    root.innerHTML = `
+      <div class="live-recap matchday-mail">
+        <div class="chart-card-title">Matchday email</div>
+        <p class="muted">When every game on a UK matchday is finished, the app builds a points email with everyone’s picks. Add emails in Predictions → Settings${autoOn ? ' — auto-send is on' : ''}.</p>
+        <p class="muted">True hands-free send needs a free <a href="https://web3forms.com" target="_blank" rel="noopener">Web3Forms</a> key pasted in Settings. Without it, you’ll get a one-tap mailto button.</p>
+      </div>`;
+    return;
+  }
+
+  const recap = buildMatchdayRecap(latest, matches, players, preds);
+  const sent = LiveStore.wasMatchdayMailSent(latest);
+  root.innerHTML = `
+    <div class="live-recap matchday-mail">
+      <div class="chart-card-title">Matchday email · ${recap.label}</div>
+      <p class="muted">${sent
+        ? 'Already sent for this matchday.'
+        : (pending.length
+          ? `${pending.length} finished matchday${pending.length > 1 ? 's' : ''} waiting to email.`
+          : 'Preview of the latest finished matchday.')}
+        ${hasKey ? ' Web3Forms will send automatically when the app is open.' : hasTo ? ' Tap send to open your mail app.' : ' Add recipient emails in Settings.'}</p>
+      <pre class="recap-body" id="matchdayRecapBody">${recap.text.replace(/</g, '&lt;')}</pre>
+      <div class="share-actions">
+        <button class="btn-g" data-send-matchday ${(!hasTo && !hasKey) ? 'disabled' : ''}>${hasKey ? 'Send email now' : 'Email points'}</button>
+        <button class="btn-ghost" data-copy-matchday>Copy</button>
+        <a class="btn-ghost" id="matchdayMailto" href="${mailtoHref(LiveStore.state.settings.recapEmails || '', recap.subject, recap.text)}">Open mail app</a>
+      </div>
+    </div>`;
+  root.querySelector('[data-copy-matchday]')?.addEventListener('click', () => {
+    copyText(recap.text).then(() => toast('Matchday recap copied'));
+  });
+  root.querySelector('[data-send-matchday]')?.addEventListener('click', async () => {
+    try {
+      const res = await sendMatchdayEmail(recap, { forceMailto: !hasKey });
+      toast(res.via === 'web3forms' ? 'Matchday email sent' : 'Mail app opened');
+      renderMatchdayMailPanel(root, liveMatches(), currentLivePlayers(), LiveStore.state.predictions);
+    } catch (e) {
+      toast(e.message || 'Could not send');
+    }
+  });
+}
+
+function renderGlobalBoard(root, matches, players, preds) {
+  if (!root) return;
+  if (liveGw == null) liveGw = getActiveGameweek(Date.now(), matches);
+  const gw = liveGw;
+  const gws = [...new Set(matches.map(m => m.gw))].sort((a, b) => a - b);
+  const gwMatches = matchesForGw(gw, matches);
+  const dayPts = players.map(p => {
+    const s = matchdayPlayerPoints(p.id, gwMatches.filter(isMatchFinished), preds);
+    return { ...p, ...s };
+  }).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
+
+  root.innerHTML = `
+    <div class="global-board">
+      <div class="global-board-head">
+        <div>
+          <div class="chart-card-title">Everyone’s picks · GW${gw}</div>
+          <p class="muted">Full league view — every friend’s prediction on one board.</p>
+        </div>
+      </div>
+      ${liveGwChipBar(gws, gw)}
+      <div class="gb-day-standings">
+        ${dayPts.map((p, i) => `
+          <div class="gb-day-chip">
+            <span class="gb-day-rank">${['🥇','🥈','🥉'][i] || (i+1)}</span>
+            <span class="gb-day-name" style="color:${typeof playerColor==='function'?playerColor(p.id):(COLORS[p.id]||'#00ff87')}">${p.name}</span>
+            <span class="gb-day-pts">${p.pts} pts</span>
+            <span class="gb-day-meta">${p.exact} exact</span>
+          </div>`).join('')}
+      </div>
+      ${everyonePicksTable(gwMatches, players, preds)}
+    </div>`;
+  bindGwChips(root);
+}
+
 function renderLiveSeason() {
   const wrap = document.getElementById('liveApp');
   if (!wrap) return;
@@ -115,6 +343,7 @@ function renderLiveSeason() {
   const preds = LiveStore.state.predictions;
   const scoresOn = !!FootballAPI.lastSync && !FootballAPI.lastError;
   const gws = [...new Set(matches.map(m => m.gw))].sort((a, b) => a - b);
+  const leagueMode = predBoardMode === 'league';
 
   const predictedCount = gwMatches.filter(m => (preds[me] || {})[m.id]).length;
   const lockedCount = gwMatches.filter(m => !canEditMatch(m)).length;
@@ -126,6 +355,41 @@ function renderLiveSeason() {
     const rows = matchesForGw(g, matches);
     picksByGw[g] = rows.filter(m => (preds[me] || {})[m.id]).length;
   });
+
+  const mineFixtures = gwMatches.map((m, i) => {
+    const pred = (preds[me] || {})[m.id];
+    const locked = !canEditMatch(m);
+    const ko = formatKickoff(m.kickoff);
+    const hasResult = m.actualHome != null && m.actualAway != null;
+    const scored = hasResult ? scorePredict(pred, { home: m.actualHome, away: m.actualAway }) : null;
+    const badges = {
+      exact:   '<span class="badge exact">⭐ 3 PTS</span>',
+      correct: '<span class="badge correct">✓ 1 PT</span>',
+      wrong:   '<span class="badge wrong">✗ 0 PTS</span>',
+      pending: '<span class="badge pend">—</span>',
+    };
+    return `<div class="pred-row live-match ${locked?'is-locked':''}" style="animation-delay:${i*0.03}s">
+      <div class="pred-teams">
+        <div class="pred-team">${crest(m.home)}<span class="pred-tnm">${m.home}</span></div>
+        <div class="pred-scores-block">
+          ${hasResult
+            ? `<div class="pred-actual-score">${m.actualHome}–${m.actualAway}</div><div class="pred-ft">${m.status === 'IN_PLAY' || m.status === 'PAUSED' ? 'LIVE' : 'RESULT'}</div>`
+            : `<div class="pred-ft">${ko.when}</div>${fidsHtml(m.kickoff, 'LOCKS IN')}`}
+        </div>
+        <div class="pred-team right">${crest(m.away)}<span class="pred-tnm">${m.away}</span></div>
+      </div>
+      <div class="pred-right live-predict">
+        <div class="pred-guess-label">${locked ? 'LOCKED PICK' : 'YOUR PICK'}</div>
+        <div class="step-row" data-match="${m.id}">
+          ${stepper(pred ? pred.home : 0, locked, `data-side="home"`)}
+          <span class="step-dash">–</span>
+          ${stepper(pred ? pred.away : 0, locked, `data-side="away"`)}
+        </div>
+        ${scored ? badges[scored.status] : ''}
+        ${locked && !hasResult ? `<button class="mini-btn" data-enter-result="${m.id}">Enter result</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 
   wrap.innerHTML = `
     <div class="live-banner">
@@ -141,7 +405,12 @@ function renderLiveSeason() {
       </div>
     </div>
 
-    <div class="live-who">
+    <div class="board-mode" role="tablist" aria-label="Prediction view">
+      <button type="button" class="board-mode-btn ${!leagueMode?'on':''}" data-board-mode="mine">My picks</button>
+      <button type="button" class="board-mode-btn ${leagueMode?'on':''}" data-board-mode="league">League board</button>
+    </div>
+
+    <div class="live-who" ${leagueMode ? 'hidden' : ''}>
       ${players.map(p => `<button class="ptab ${p.id===me?'active':''}" data-live-player="${p.id}">${p.name}${players.length>1?`<span class="ptab-x" data-remove-player="${p.id}" title="Remove ${p.name}">×</span>`:''}</button>`).join('')}
       <button class="ptab add" data-add-player>+ Add friend</button>
     </div>
@@ -162,46 +431,13 @@ function renderLiveSeason() {
 
     <div class="live-predict-head" id="livePredict">
       <div>
-        <div class="chart-card-title">Predict GW${gw}</div>
-        <p class="muted">${gwWindowLabel(gw, matches)} · 10 matches this gameweek</p>
+        <div class="chart-card-title">${leagueMode ? `League board · GW${gw}` : `Predict GW${gw}`}</div>
+        <p class="muted">${gwWindowLabel(gw, matches)} · ${leagueMode ? 'everyone’s scorelines side by side' : '10 matches this gameweek'}</p>
       </div>
     </div>
-    <div class="live-fixtures">
-      ${gwMatches.map((m, i) => {
-        const pred = (preds[me] || {})[m.id];
-        const locked = !canEditMatch(m);
-        const ko = formatKickoff(m.kickoff);
-        const hasResult = m.actualHome != null && m.actualAway != null;
-        const scored = hasResult ? scorePredict(pred, { home: m.actualHome, away: m.actualAway }) : null;
-        const badges = {
-          exact:   '<span class="badge exact">⭐ 3 PTS</span>',
-          correct: '<span class="badge correct">✓ 1 PT</span>',
-          wrong:   '<span class="badge wrong">✗ 0 PTS</span>',
-          pending: '<span class="badge pend">—</span>',
-        };
-        return `<div class="pred-row live-match ${locked?'is-locked':''}" style="animation-delay:${i*0.03}s">
-          <div class="pred-teams">
-            <div class="pred-team">${crest(m.home)}<span class="pred-tnm">${m.home}</span></div>
-            <div class="pred-scores-block">
-              ${hasResult
-                ? `<div class="pred-actual-score">${m.actualHome}–${m.actualAway}</div><div class="pred-ft">${m.status === 'IN_PLAY' || m.status === 'PAUSED' ? 'LIVE' : 'RESULT'}</div>`
-                : `<div class="pred-ft">${ko.when}</div>${fidsHtml(m.kickoff, 'LOCKS IN')}`}
-            </div>
-            <div class="pred-team right">${crest(m.away)}<span class="pred-tnm">${m.away}</span></div>
-          </div>
-          <div class="pred-right live-predict">
-            <div class="pred-guess-label">${locked ? 'LOCKED PICK' : 'YOUR PICK'}</div>
-            <div class="step-row" data-match="${m.id}">
-              ${stepper(pred ? pred.home : 0, locked, `data-side="home"`)}
-              <span class="step-dash">–</span>
-              ${stepper(pred ? pred.away : 0, locked, `data-side="away"`)}
-            </div>
-            ${scored ? badges[scored.status] : ''}
-            ${locked && !hasResult ? `<button class="mini-btn" data-enter-result="${m.id}">Enter result</button>` : ''}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
+    ${leagueMode
+      ? `<div class="live-league-board">${everyonePicksTable(gwMatches, players, preds)}</div>`
+      : `<div class="live-fixtures">${mineFixtures}</div>`}
 
     <div class="live-share">
       <div>
@@ -225,7 +461,7 @@ function renderLiveSeason() {
     </div>
 
     <details class="live-settings">
-      <summary>Settings · Firebase, lock override, optional APIs</summary>
+      <summary>Settings · Firebase, matchday email, lock override</summary>
       <p class="muted">Live FT / in-play scores load automatically from ESPN — no token. football-data.org only works on localhost (their API blocks GitHub Pages).</p>
       <label>football-data.org token (optional, localhost only)
         <input id="setToken" type="password" autocomplete="off" placeholder="Not needed on the live site" value="${LiveStore.state.settings.footballDataToken || ''}"/>
@@ -239,8 +475,14 @@ function renderLiveSeason() {
       <label>Google Form URL (optional — in-app form is already live)
         <input id="setForm" type="url" placeholder="https://docs.google.com/forms/..." value="${LiveStore.state.settings.googleFormUrl || ''}"/>
       </label>
-      <label>Recap emails (comma separated)
+      <label>Matchday / recap emails (comma separated)
         <input id="setEmails" type="text" placeholder="akash@..., parth@..." value="${LiveStore.state.settings.recapEmails || ''}"/>
+      </label>
+      <label>Web3Forms access key (optional — auto-emails when a matchday finishes and the app is open)
+        <input id="setWeb3" type="password" autocomplete="off" placeholder="From web3forms.com" value="${LiveStore.state.settings.web3formsKey || ''}"/>
+      </label>
+      <label class="check">
+        <input id="setAutoMail" type="checkbox" ${LiveStore.state.settings.autoMatchdayEmail !== false ? 'checked' : ''}/> Auto matchday email when all games that day are FT
       </label>
       <label>PIN for ${players.find(p=>p.id===me)?.name || 'you'} (stops mates editing your picks)
         <input id="setPin" type="password" inputmode="numeric" maxlength="6" placeholder="Optional 4-digit PIN"/>
@@ -256,10 +498,16 @@ function renderLiveSeason() {
 
   fillRecap(gw, matches, players, preds);
 
+  wrap.querySelectorAll('[data-board-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      predBoardMode = btn.dataset.boardMode;
+      renderLiveSeason();
+    });
+  });
   wrap.querySelectorAll('[data-live-player]').forEach(btn => {
     btn.addEventListener('click', () => switchLivePlayer(btn.dataset.livePlayer));
   });
-  wrap.querySelector('[data-add-player]').addEventListener('click', addLivePlayer);
+  wrap.querySelector('[data-add-player]')?.addEventListener('click', addLivePlayer);
   wrap.querySelectorAll('[data-remove-player]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -279,10 +527,12 @@ function renderLiveSeason() {
   wrap.querySelectorAll('.gw-chip[data-gw]').forEach(btn => {
     btn.addEventListener('click', () => { liveGw = Number(btn.dataset.gw); renderLiveSeason(); });
   });
-  wrap.querySelectorAll('.step-row').forEach(row => bindStepper(row, me, gwMatches));
-  wrap.querySelectorAll('[data-enter-result]').forEach(btn => {
-    btn.addEventListener('click', () => enterResult(btn.dataset.enterResult));
-  });
+  if (!leagueMode) {
+    wrap.querySelectorAll('.step-row').forEach(row => bindStepper(row, me, gwMatches));
+    wrap.querySelectorAll('[data-enter-result]').forEach(btn => {
+      btn.addEventListener('click', () => enterResult(btn.dataset.enterResult));
+    });
+  }
   wrap.querySelector('[data-export]').addEventListener('click', () => {
     copyText(LiveStore.exportCode()).then(() => toast('League code copied'));
   });
@@ -405,6 +655,8 @@ function saveLiveSettings() {
   const leagueId = document.getElementById('setLeague').value.trim() || 'PARTH';
   const form = document.getElementById('setForm').value.trim();
   const emails = document.getElementById('setEmails').value.trim();
+  const web3formsKey = document.getElementById('setWeb3')?.value.trim() || '';
+  const autoMatchdayEmail = document.getElementById('setAutoMail')?.checked !== false;
   const pin = document.getElementById('setPin').value.trim();
   const allowLate = document.getElementById('setLate').checked;
   let firebaseConfig = null;
@@ -414,7 +666,15 @@ function saveLiveSettings() {
     catch (e) { toast(e.message || 'Firebase JSON is invalid'); return; }
   }
   LiveStore.state.leagueId = leagueId;
-  LiveStore.updateSettings({ footballDataToken: token, googleFormUrl: form, recapEmails: emails, allowLate, firebaseConfig });
+  LiveStore.updateSettings({
+    footballDataToken: token,
+    googleFormUrl: form,
+    recapEmails: emails,
+    allowLate,
+    firebaseConfig,
+    web3formsKey,
+    autoMatchdayEmail,
+  });
   if (pin) LiveStore.setPin(LiveStore.state.currentPlayerId, pin);
   LiveStore.connectFirebase().then(ok => {
     if (firebaseConfig) toast(ok ? 'Firebase connected' : 'Firebase failed — local + share codes still work');
@@ -425,24 +685,13 @@ function saveLiveSettings() {
 }
 
 function fillRecap(gw, matches, players, preds) {
-  const gwMatches = matchesForGw(gw, matches);
-  const board = liveLeaderboard(players, gwMatches, preds);
-  const lines = [
-    `🏆 PL Predictions Pro — GW${gw} recap`,
-    `2026/27 · ${gwMatches.filter(m => m.actualHome != null).length}/${gwMatches.length} results in`,
-    '',
-  ];
-  board.forEach((p, i) => {
-    lines.push(`${['🥇','🥈','🥉'][i] || (i+1)+'.'} ${p.name}  ${p.totalPts} pts  (${p.totalExact} exact${p.bestMiss ? `, nearest miss ${p.bestMiss.goalDiff}` : ''})`);
-  });
-  lines.push('', 'Scoring: exact 3 · correct result 1 · miss 0');
-  const text = lines.join('\n');
+  const text = buildGwRecapText(gw, matches, players, preds);
   const body = document.getElementById('recapBody');
   if (body) body.textContent = text;
   const mail = document.getElementById('recapMail');
   if (mail) {
     const to = (LiveStore.state.settings.recapEmails || '').trim();
-    mail.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent('PL Predictions Pro GW'+gw+' recap')}&body=${encodeURIComponent(text)}`;
+    mail.href = mailtoHref(to, 'PL Predictions Pro GW' + gw + ' recap', text);
   }
 }
 
@@ -485,7 +734,7 @@ function liveGwPoints(playerId, matches, predictions) {
 
 function renderLiveLeaderboardPage() {
   if (typeof setSectionCopy === 'function') {
-    setSectionCopy('leaderboard', 'Season Leaderboard', '2026/27 live table · updates as results come in');
+    setSectionCopy('leaderboard', 'Season Leaderboard', '2026/27 live table · everyone’s picks');
   }
   const matches = liveMatches();
   const players = currentLivePlayers();
@@ -523,6 +772,8 @@ function renderLiveLeaderboardPage() {
   setTimeout(() => {
     document.querySelectorAll('#s-leaderboard .lb-bar-fill').forEach(el => el.style.width = el.dataset.w + '%');
   }, 60);
+  renderGlobalBoard(document.getElementById('globalBoard'), matches, players, preds);
+  renderMatchdayMailPanel(document.getElementById('matchdayMail'), matches, players, preds);
 }
 
 function renderLiveResultsPage() {
@@ -715,6 +966,7 @@ async function syncLiveApi(manual) {
   const res = await FootballAPI.syncGameweek(gw);
   if (manual) toast(res.ok ? (res.count ? `Updated ${res.count} score${res.count===1?'':'s'}` : 'API ok — no new scores yet') : (res.error || 'Sync failed'));
   if (typeof renderCurrent === 'function') renderCurrent();
+  maybeAutoMatchdayEmail();
 }
 
 function bootLiveSeason() {
@@ -729,5 +981,6 @@ function bootLiveSeason() {
       return Date.now() >= t && (m.actualHome == null || m.status === 'IN_PLAY' || m.status === 'PAUSED');
     });
     if (live) syncLiveApi(false);
+    else maybeAutoMatchdayEmail();
   }, 60000);
 }

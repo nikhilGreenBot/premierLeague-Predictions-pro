@@ -12,12 +12,15 @@ function defaultLiveState() {
     emails: {},
     predictions: {},
     results: {},
+    matchdayMailsSent: {},
     settings: {
       footballDataToken: '',
       firebaseConfig: null,
       googleFormUrl: '',
       allowLate: false,
       recapEmails: '',
+      autoMatchdayEmail: true,
+      web3formsKey: '',
     },
   };
 }
@@ -34,6 +37,9 @@ const LiveStore = {
     try { saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { saved = null; }
     this.state = { ...defaultLiveState(), ...(saved || {}) };
     this.state.settings = { ...defaultLiveState().settings, ...(this.state.settings || {}) };
+    if (!this.state.matchdayMailsSent || typeof this.state.matchdayMailsSent !== 'object') {
+      this.state.matchdayMailsSent = {};
+    }
     if (cfg.footballDataToken && !this.state.settings.footballDataToken) {
       this.state.settings.footballDataToken = cfg.footballDataToken;
     }
@@ -150,6 +156,16 @@ const LiveStore = {
   updateSettings(partial) {
     this.state.settings = { ...this.state.settings, ...partial };
     this.saveLocal();
+  },
+
+  markMatchdayMailSent(dateKey, meta = {}) {
+    if (!this.state.matchdayMailsSent) this.state.matchdayMailsSent = {};
+    this.state.matchdayMailsSent[dateKey] = { at: Date.now(), ...meta };
+    this.saveLocal();
+  },
+
+  wasMatchdayMailSent(dateKey) {
+    return !!(this.state.matchdayMailsSent && this.state.matchdayMailsSent[dateKey]);
   },
 
   exportCode() {
